@@ -4,9 +4,11 @@
 
 CSS 调试技巧与最佳实践的综合性指南和文档。
 
+<img src="./logo.png" alt="CSS Debug Master" style="width: 100%" />
+
 ## 项目概述
 
-本项目作为 CSS 调试的知识库，提供详细的解释、示例和常见 CSS 问题的解决方案。
+本项目作为 CSS 调试的知识库，提供详细的解释、示例和常见 CSS 问题的解决方案。内容来源 [Debugging CSS](https://debuggingcss.com/)，本网站内容**仅用于学习交流，不用于商业用途**。
 
 ## 主要特点
 

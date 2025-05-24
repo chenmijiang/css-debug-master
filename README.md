@@ -4,9 +4,11 @@
 
 A comprehensive guide and documentation for CSS debugging techniques and best practices.
 
+<img src="./logo.png" alt="CSS Debug Master" style="width: 100%" />
+
 ## Overview
 
-This project serves as a knowledge base for CSS debugging, providing detailed explanations, examples, and solutions for common CSS issues and challenges.
+This project serves as a knowledge base for CSS debugging, providing detailed explanations, examples, and solutions for common CSS issues and challenges. Content source from [Debugging CSS](https://debuggingcss.com/), this website content **is only for learning and communication, not for commercial use**.
 
 ## Features
 

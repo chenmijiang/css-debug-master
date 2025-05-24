@@ -19,13 +19,13 @@ const meta: MetaRecord = {
     title: 'Foreword',
   },
   overview: {
-    title: 'Overview',
+    title: 'Introduction and Overview',
   },
   introduction_to_css_bugs: {
     title: 'Introduction to CSS Bugs',
   },
   environments_and_tools: {
-    title: 'Environments and Tools',
+    title: 'Debugging Environments and Tools',
   },
   common_bugs: {
     title: 'Common Bugs',
@@ -37,7 +37,7 @@ const meta: MetaRecord = {
     title: 'Inconsistency Implementation',
   },
   tips_tricks: {
-    title: 'Tips and Tricks',
+    title: 'General Tips and Tricks',
   },
   acknowledgements: {
     title: 'Acknowledgements',
