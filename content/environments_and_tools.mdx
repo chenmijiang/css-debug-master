@@ -38,7 +38,7 @@ Turning a CSS declaration on and off is similar to commenting CSS. In fact, if y
 
 ```css
 .menu {
-/* display: block; */
+  /* display: block; */
 }
 ```
 
@@ -242,7 +242,7 @@ Notice that when we select an element, we see the media query for it. The handy 
 The `viewport` meta tag tells the browsers, “Hey, please take into consideration that this website should be responsive?” Add the following to the HTML’s head element:
 
 ```html
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 ```
 
 ### The Order of Media Queries Matters
@@ -398,7 +398,7 @@ html {
 
 ![image-20250324223540202](/img/image-20250324223540202.png)
 
-I inspected a website’s logo to see its box model. Notice that you need to open the “Computed” tab to see the box model. All boxes are labeled, except the one for width and height. When debugging an element, looking at the box model is extremely useful because it will show you all of the inner and outer spacings of an element. 
+I inspected a website’s logo to see its box model. Notice that you need to open the “Computed” tab to see the box model. All boxes are labeled, except the one for width and height. When debugging an element, looking at the box model is extremely useful because it will show you all of the inner and outer spacings of an element.
 
 Sometimes, we might build a web page without a CSS reset file, and we’ll wonder why some elements have certain spacing. Looking at the box model is the best way to get an idea of what’s happening.
 
@@ -663,7 +663,7 @@ Another option would be to add inline CSS styles, which would override the ones 
 
 ### Changing an Element’s Type
 
-Say you have a `div` element but want to change its type without leaving the DevTools. Well, this is possible. To change it, double-click the element type and then edit the opening tag. 
+Say you have a `div` element but want to change its type without leaving the DevTools. Well, this is possible. To change it, double-click the element type and then edit the opening tag.
 
 Note: there is no needed to edit the closing tag. The DevTools will do that automatically.
 
@@ -713,19 +713,19 @@ In CSS, the order of pseudo-classes matters. It should be as follows:
 
 ```css
 a:visited {
-color: pink;
+  color: pink;
 }
 
 a:focus {
-outline: solid 1px dotted;
+  outline: solid 1px dotted;
 }
 
 a:hover {
-background: grey;
+  background: grey;
 }
 
 a:active {
-background: darkgrey;
+  background: darkgrey;
 }
 ```
 
@@ -773,7 +773,7 @@ In this example, we have a dropdown menu that is toggled on hover via JavaScript
 
 ### Is the Element Added to the HTML on Hover?
 
-This is more challenging. In this case, an element is added to the HTML only when its parent is hovered over, and it’s removed completely from the HTML when the user stops hovering. We’ll need help from the DevTools for this. To debug, we need to freeze the website once the thing we want to debug has become visible. The best way to do that is to pause the JavaScript’s execution. 
+This is more challenging. In this case, an element is added to the HTML only when its parent is hovered over, and it’s removed completely from the HTML when the user stops hovering. We’ll need help from the DevTools for this. To debug, we need to freeze the website once the thing we want to debug has become visible. The best way to do that is to pause the JavaScript’s execution.
 
 When JavaScript execution is paused, it’s possible to follow the code that toggles the menu. This way, we can catch the element once it appears, and inspect it from there.
 
@@ -825,8 +825,8 @@ In the JavaScript for the toggle button, you would add the following:
 
 ```javascript
 function showNav() {
-debugger;
-// Add a breakpoint once this function is called.
+  debugger;
+  // Add a breakpoint once this function is called.
 }
 ```
 
@@ -936,7 +936,7 @@ Using `display: none` incorrectly is a hindrance to accessibility. It can easily
 
 ```html
 <label class="visually-hidden" for="search">Search</label>
-<input type="search" id="search"/>
+<input type="search" id="search" />
 <button>Show results</button>
 ```
 
@@ -971,7 +971,7 @@ Fixing small issues related to this can have a huge impact, and you don’t need
 
 ```html
 <label class="visually-hidden" for="email">Email address</label>
-<input type="search" placeholder="Email address" id="email"/>
+<input type="search" placeholder="Email address" id="email" />
 ```
 
 We have an email `input`, without a `label` associated with it. If we inspect the `input` and go to the accessibility panel, we will see something like this:

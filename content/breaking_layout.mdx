@@ -59,7 +59,12 @@ The first one, `data-forcefeed="words|2"`, will generate two random words, accor
 
 ```js
 window.words = ['Design', 'Work', 'Awesome', 'Cool'];
-window.sentences = ['Can you break me?', 'I love food and baking', 'How are you today?', 'When was the last time you saw mom?'];
+window.sentences = [
+  'Can you break me?',
+  'I love food and baking',
+  'How are you today?',
+  'When was the last time you saw mom?',
+];
 ```
 
 #### Execute the Script
@@ -67,7 +72,7 @@ window.sentences = ['Can you break me?', 'I love food and baking', 'How are you 
 Finally, we need to make the script work on the page.
 
 ```js
-forceFeed({words: window.words, sentences: window.sentences});
+forceFeed({ words: window.words, sentences: window.sentences });
 ```
 
 With that, we can now refresh the page ( `Command` or `Control` + `R` ) to see the content change. Perhaps you will notice a broken element.
@@ -104,7 +109,7 @@ Another clear example of the importance of testing the in-between state is the f
 
 ![image-20250325213427906](/img/image-20250325213427906.png)
 
-In the middle view, the social media icon for Instagram breaks onto a new line. Such behavior is not expected and shouldn’t happen at all. 
+In the middle view, the social media icon for Instagram breaks onto a new line. Such behavior is not expected and shouldn’t happen at all.
 
 This should suffice to illustrate that such issues can’t be ignored. Thanks to the simple trick of browser resizing, we can discover them fairly easily.
 

@@ -31,7 +31,6 @@ Once you establish that the CSS property can be expected to work in the browser 
 
 In the next section, we will dig into the details of the types of CSS issues we find and how to debug them using the browser’s DevTools.
 
-
 ## CSS Bug Types
 
 Categorizing bugs by type is helpful. For example, is the issue design-related or related to a syntax error? In this chapter, we will go through each type, along with a basic example.
@@ -160,9 +159,13 @@ Your CSS could be 100% correct and valid, but one typo in a class name could lea
 CSS stands for Cascading Style Sheets. As indicated by the name, a website’s styles cascade, and their order matters. If you define a CSS rule for an element and then redefine it at the end of the CSS file, the latter will override the former.
 
 ```css
-.element { color: #000; }
+.element {
+  color: #000;
+}
 /* 500 lines later… */
-.element { color: #222; }
+.element {
+  color: #222;
+}
 ```
 
 This is a very simple example of what can happen. You might face a trickier issue than this. Consider an element that should switch colors on mobile and desktop:
@@ -188,13 +191,13 @@ CSS caching happens on the server, not on the local machine. A common problem is
 There are multiple solutions to this problem, the simplest being to add a query string:
 
 ```html
-<link rel="stylesheet" href="app.css?v=1.0.0">
+<link rel="stylesheet" href="app.css?v=1.0.0" />
 ```
 
 And when you make a change, you would also change the version:
 
 ```html
-<link rel="stylesheet" href="app.css?v=1.0.1">
+<link rel="stylesheet" href="app.css?v=1.0.1" />
 ```
 
 Then, the browser would download the latest CSS file. For more information, CSS-Tricks has [a great article](https://css-tricks.com/strategies-for-cache-busting-css/).

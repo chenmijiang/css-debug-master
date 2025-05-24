@@ -242,7 +242,9 @@ And to polish it, we can revert the elements that shouldn’t have been inverted
 
 ```css
 html {
-  img, video, iframe {
+  img,
+  video,
+  iframe {
     filter: invert(100%) hue-rotate(-25deg);
   }
 }
@@ -281,7 +283,9 @@ Here is how to do it:
   outline: solid 1px;
 }
 
-img, video, iframe {
+img,
+video,
+iframe {
   background: #ccc;
   opacity: 0;
 }
@@ -362,4 +366,3 @@ Generally speaking, `width` and `height` attributes are not recommended for any 
 ```
 
 Going further, you can use Gaël Poupard’s browser extension, [a11y.css](https://ffoodd.github.io/a11y.css/index.html), which shows different advice, warnings, and errors.
-
