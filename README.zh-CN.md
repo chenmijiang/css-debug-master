@@ -20,11 +20,19 @@ CSS 调试技巧与最佳实践的综合性指南和文档。
 ## 快速开始
 
 1. 克隆仓库
+
+   ```bash
+   git clone https://github.com/chenmijiang/css-debug-master.git
+   ```
+
 2. 安装依赖：
+
    ```bash
    bun install
    ```
+
 3. 运行开发服务器：
+
    ```bash
    bun run dev
    ```
