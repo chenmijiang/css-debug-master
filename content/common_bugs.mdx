@@ -1,0 +1,3403 @@
+# CSS Properties That Commonly Lead to Bugs
+
+Web browsers have evolved a lot in the last few years, which has resulted in more consistent websites. Nevertheless, they’re still not perfect, and some issues can confuse developers. Compounding the challenge are different screen sizes, multilingual websites, and human error.
+
+As you implement a design, you might encounter CSS bugs for various reasons, both visual and non-visual, which I covered in Chapter 2. Some of them are hard to track.
+
+In this chapter, we’ll dive deep into CSS properties and their issues. Our goal is to get a detailed understanding of common bugs with certain properties, and to learn how to solve them properly.
+
+## Box Sizing
+
+The `box-sizing` property controls how the total width and height of an element are calculated. By default, the width and height of an element are assigned only to the content box, which means that `border` and `padding` are added to that width.
+
+If you’re not using a CSS reset file, you might forget to reset the box-sizing property, which could cause one of the following:
+
+- **Horizontal scrolling**
+  A block element takes up the full width of its parent. If it has a border or padding, this will add to its width, which will result in horizontal scrolling.
+- **Oversized elements**
+  An element’s size can be bigger than you want it to be.
+
+To avoid this, make sure that the property is reset properly:
+
+```css
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+```
+
+With that, we can be sure that the most important CSS property works as expected. It’s worth mentioning that making box-sizing to be [inherited](https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/) is better because it will enable all elements to inherit this box-sizing property from the html element by default.
+
+## Display Type
+
+The `display` CSS property controls whether an element is a block or inline element. It also determines the layout type applied to its child items, such as grid or flex.
+
+When used incorrectly, the `display` type can cause confusion for developers. In this section, we’ll go through some ways in which the `display` property can go wrong.
+
+### Inline Elements
+
+Elements such as `span` and `a` are inline by default. Suppose we want to add vertical padding to a `span`:
+
+```css
+span {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+```
+
+This won’t work. Vertical padding doesn’t work for inline elements. You would have to change the element’s `display` property to `inline-block` or `block`.
+
+The same goes for `margin`:
+
+```css
+span {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+```
+
+This margin won’t have an effect. You would have to change the `display` type to `inline-block` or `block`.
+
+![image-20250325220454633](/img/image-20250325220454633.png)
+
+#### Spacing and Inline Elements
+
+Each inline element is treated as a word. Take the following:
+
+```html
+<span>Hello</span> <span>World</span>
+```
+
+This will render `Hello World`. Notice the spacing between the two words. Where did this come from? Well, because an inline element is treated as a word, the browser automatically adds a space between words — just like there is a space between each word when you type a sentence.
+
+This gets more interesting when we have a group of links:
+
+![image-20250325220524451](/img/image-20250325220524451.png)
+
+The links are next to each other, with a space between them. Those spaces might cause confusion when you’re dealing with `inline` or `inline-block` elements because they are not from the CSS — the spaces appear because the links are inline elements.
+
+Suppose we have an inline list of category tags, and we want a space of 8 pixels between them.
+
+```html
+<ul>
+  <li class="tag"><a href="#">Food</a></li>
+  <li class="tag"><a href="#">Technology</a></li>
+  <li class="tag"><a href="#">Design</a></li>
+</ul>
+```
+
+In the CSS, we would add the spacing like this:
+
+```css
+.tag {
+  display: inline-block;
+  margin-right: 8px;
+}
+```
+
+You would expect that the space between them would equal 8 pixels, right? This is not the case. The spacing would be 8 pixels **plus an additional 1 pixel from the character spacing** mentioned previously. Here is how to solve this issue:
+
+```css
+ul {
+  display: flex;
+  flex-wrap: wrap;
+}
+```
+
+By adding `display: flex` to the parent, the additional spacing will be gone.
+
+### Block Elements
+
+The `block` display type is the default for certain HTML elements, such as `div`, `p`, `section`, and `article`. In some cases, we might need to apply the `block` display type because an element is inline, such as:
+
+- form labels and inputs,
+- `span` and `a` elements.
+
+When `display: block` is applied to `span` or `a`, it will work fine. However, when it’s applied to an input, it won’t affect the element as expected.
+
+```css
+input[type='email'] {
+  display: block; /* The element does not take up the full width. */
+}
+```
+
+The reason is that form elements are **replaced elements**. What is a replaced element? It’s an HTML element whose width and height are predefined, without CSS.
+
+![image-20250325220636095](/img/image-20250325220636095.png)
+
+To override that behavior, we need to force a full width on the form element.
+
+```css
+input[type='email'] {
+  display: block;
+  width: 100%;
+}
+```
+
+There are replaced elements other than form inputs, including `video`, `img`, `iframe`, `br`, and `hr`. Here are some interesting facts about replaced elements:
+
+- It’s not possible to use pseudo-elements with replaced elements. For example, adding an `:after` pseudo-element to an input is not possible.
+- The default size of a replaced element is 300 by 150 pixels. If your page has an `img` or an `iframe` and it doesn’t load for some reason, the browser will give it this default size.
+
+Consider the following example:
+
+```css
+img {
+  display: block;
+}
+```
+
+We have an image with `display: block`. Do you expect that it will take up the full width of its container? It won’t. You need to force that by adding the following:
+
+```css
+img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+}
+```
+
+It’s worth [mentioning](https://bitsofco.de/styling-broken-images/) that when an image fails to load, it’s not considered a replaced element. You can actually add `::before` and `::after` pseudo-elements to it:
+
+```css
+img::after {
+  content: 'The image didn’t load';
+}
+```
+
+#### Spacing Below an Image
+
+Have you ever noticed a little bit of space below an `img` that you’ve added? You didn’t add a margin or anything. The space is there because the `img` is treated as an inline element, which is similar to having a character with some space below it.
+
+![image-20250325220721692](/img/image-20250325220721692.png)
+
+To fix this, add `display: block` to the image. The spacing will be removed.
+
+#### The `legend` Element
+
+If you are using `fieldset` to group form inputs, add a `legend` element. By default, it won’t take up the full width of its parent unless you force it.
+
+```html
+<fieldset>
+  <legend>What’s your favorite meal?</legend>
+  <input type="radio" id="chicken" name="meal" />
+  <label for="chicken">Chicken</label>
+  <input type="radio" id="meat" name="meal" />
+  <label for="meat">Meat</label>
+</fieldset>
+```
+
+The `legend` element is block-level, but its width will stay the same because it has `min-width: max-content` by default, which means it has the width of its text content. To make it full width, do this:
+
+```css
+legend {
+  width: 100%;
+}
+```
+
+Notice that the `legend` element doesn’t accept `inline` or `inline-block`. If you use them as the display type, the computed display will be `block`.
+
+### Using `display` With Positioned Elements
+
+When an element has a `position` value of `absolute`, it becomes a block-level element by default. This means that adding `inline-block` or `block` as the display type won’t affect it at all.
+
+```css
+.element {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  display: block; /* Not necessary */
+}
+```
+
+The only exception to using the display property with an absolutely positioned element is in the following example:
+
+```css
+.element {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+}
+@media (min-width: 800px) {
+  .element {
+    display: block;
+  }
+}
+```
+
+In this case, the element is hidden for small views and shown for large ones. Using `display: block` in this way is OK.
+
+### Alignment of Inline Elements
+
+A common issue in CSS comes up when you try to align an icon and text. Right away, you notice that they are not aligned vertically. Either the icon or the text is off by a few pixels.
+
+![image-20250325220852203](/img/image-20250325220852203.png)
+
+Thankfully, we can use the `vertical-align` property to fix that alignment issue. This works with the `inline`, `inline-block`, `inline-flex`, `inline-grid`, `inline-table`, and `table-cell` display type.
+
+```css
+.icon {
+  vertical-align: middle;
+}
+```
+
+### An Inline Display Overriding One in a CSS File
+
+Suppose you’re working on a layout, and you add an inline CSS style to hide an element. Later on, you forget about it, and you head over to the CSS file to try to make the element visible, and you add `display: block`. This won’t work, because inline styles have a higher specificity than rules in a CSS file.
+
+```html
+<p style="display: none;">Debugging CSS</p>
+```
+
+```css
+p {
+  display: block;
+}
+```
+
+### Float and Block Display
+
+If an element has `float` applied to it, then the browser will display it as a block-level element, regardless of its type.
+
+```html
+<img src="food.jpg alt="" />
+```
+
+```css
+img {
+  float: left;
+}
+```
+
+An image is not a block-level element. In the third chapter of this book, I explained about greyed-out properties in the “Computed” panel. If you inspect an element that has `float: left` applied to it, you will notice that the `display: block` property is greyed out. This means the display type is being defined by the browser, not by us.
+
+### Float and Flex Display
+
+It’s worth mentioning that when you apply a `float` to an element with a display type of `flex` or `inline-flex`, it won’t affect the element at all.
+
+```css
+.element {
+  display: flex;
+  float: left; /* Has no effect! */
+}
+```
+
+### Showing and Hiding the `br` Element
+
+The `br` element produces a line break in the text, which is equivalent to hitting the `Enter` key while typing on a keyboard. It’s useful to use in a paragraph in which you want two lines.
+
+A less commonly known tip is that you can hide the `br` element with CSS. Say you want two lines on mobile, and three on desktop. This can be easily done!
+
+```css
+@media (min-width: 800px) {
+  br {
+    display: none;
+  }
+}
+```
+
+### Situations to Avoid the Display Type
+
+If you want to hide an element on the page, you might be tempted to use `display: none` because it’s easy and quick. But in doing so, the element will be completely hidden from screen readers. Let’s look at a couple of cases in which you shouldn’t use the `display` property.
+
+![image-20250325221055737](/img/image-20250325221055737.png)
+
+#### To Hide a Form’s Input Label
+
+Using only an `input’s` placeholder as the label is a common UI pattern. It’s tempting to just hide the `label` with CSS. This is bad for accessibility. Hide the label only visually, using the method discussed in the third chapter.
+
+#### To Style a Checkbox
+
+Styling a checkbox is possible in CSS. But you might run into an issue if you use `display` incorrectly. Hiding the input completely from the page will impair accessibility. Hide it visually only.
+
+```html
+<input type="checkbox" id="food" class="visually-hidden" />
+<label for="food">Are you hungry?</label>
+```
+
+Here is a [great article](https://www.creativejuiz.fr/blog/en/tutorials/customize-checkbox-and-radio-button-with-css) about styling a custom checkbox by Geoffrey Crofte.
+
+## Margin
+
+If two or more elements are close to each other on the page, the user will assume that they are related to each other. The `margin` CSS property is important in helping us make a design look more ordered and consistent.
+
+### Margin Collapse
+
+This is one of the most common issues with margins. Say you have two elements, the one above with `margin-bottom` and the one below with `margin-top`. The greater of the two values will be used as the margin between the elements, and the other will be ignored by the browser.
+
+![image-20250325221203681](/img/image-20250325221203681.png)
+
+```html
+<div class="item-1"></div>
+<div class="item-2"></div>
+```
+
+```css
+.item-1 {
+  margin-bottom: 50px;
+}
+.item-2 {
+  margin-top: 30px;
+}
+```
+
+Mixing top and bottom margins leads to problems. To avoid this, use one-directional margins — for example, adding `margin-bottom` to all elements. Note that if an element is a part of a flexbox or grid container, then the margins won’t collapse.
+
+### Margin and Inline Elements
+
+As mentioned in the `display` section, inline elements such as `span` don’t accept vertical margins until their display type is changed. Make sure vertical margins are added to the correct type of element.
+
+### Just-in-Case Margin
+
+I call this a “just-in-case” margin because that’s what it is. Suppose we have two elements:
+
+![image-20250325221240479](/img/image-20250325221240479.png)
+
+We add a margin to the right or left side of one of the elements (in this case, to the right of the title), just in case its content becomes too long and brings the element too close to the adjacent one. If the title runs too long, the margin prevents it from sticking to the icon.
+
+### Centering an Element
+
+Because `margin: auto` is a popular way to center an element, it’s important to mention that it only works with block-level elements.
+
+```css
+span {
+  width: 500px;
+  margin: 0 auto;
+}
+```
+
+This won’t work unless the `span` is changed to a block-level element.
+
+### Auto Margin and Positioning
+
+When an element is positioned absolutely, it’s possible to use `margin: auto` to center it horizontally and vertically, without using transforms or other CSS techniques such as flexbox.
+
+![image-20250325221310201](/img/image-20250325221310201.png)
+
+```css
+.element {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  margin: auto;
+}
+```
+
+Setting a `width` and `height` on the element makes it possible to center the item with `margin: auto` only.
+
+### Auto Margin and Flexbox
+
+With flexbox, we can use an `auto` margin to push an element all the way over in one direction.
+
+![image-20250325221342358](/img/image-20250325221342358.png)
+
+The button has the rule `margin-left: auto`, which pushes it to the far right. Flexbox and auto margins work great together for such purposes. We can use this technique to align an element without additional markup.
+
+## Padding
+
+The `padding` property adds space **inside** an element. That’s what differentiates it from `margin`. There are some misconceptions about padding. Let’s explore them.
+
+### Using Padding With Height
+
+Suppose you have an element with a fixed height, such as a button. Controlling the vertical spacing within the element can be confusing because large padding values might push the text downwards and break the button.
+
+![image-20250325221415666](/img/image-20250325221415666.png)
+
+In the button on the left, notice how the text is pushed too far down. The reason is because of this in the CSS:
+
+```css
+.button {
+  height: 40px;
+  padding-bottom: 10px;
+}
+```
+
+A `button` element should never be given a fixed height. It will make things complex and controlling the button will be harder. Instead, you should use vertical `padding`.
+
+You might encounter a case when dealing with a web font that has additional spacing in its characters. In this case, you might need to tweak the top or bottom padding in order to center the button’s text vertically.
+
+![image-20250325221443080](/img/image-20250325221443080.png)
+
+```css
+.button {
+  padding: 3px 16px 8px 16px;
+}
+```
+
+Here, we’ve tweaked the padding so that the text can be centered vertically in the button.
+
+### Padding and Inline Elements
+
+As mentioned in the `display` section, vertical padding won’t work unless an element’s display type is something other than `inline`.
+
+### The Padding Shorthand
+
+The shorthand for padding is ordered as top, right, bottom, left. It’s sometimes confusing to use, and the same applies for `margin` as well. You could end up doing the following:
+
+```css
+.element {
+  padding-top: 20px 20px 0 20px;
+  /* … instead of: */
+  padding: 20px 20px 0 20px;
+}
+```
+
+This would be an error. The `padding-top` property takes only one value, so writing four values would make the rule invalid. It could be a reason why the padding is not working as you intended. Make sure to type the correct property name.
+
+Remembering the correct order of the `padding` and `margin` shorthand is confusing, even for an experienced front-end developer. A clock is a simple way to remember it:
+
+![image-20250325221515807](/img/image-20250325221515807.png)
+
+Remember to start from the `top`, and the rest will follow.
+
+### Percentage-Based Padding
+
+Using a percentage for padding is OK, but to make it work as you expect, remember that it works based on the element’s width.
+
+```css
+.element {
+  width: 200px;
+  padding-top: 10%;
+}
+```
+
+The computed value of this element’s `padding-top` is 20px. Remember how it’s calculated when you’re debugging an element with percentage-based padding.
+
+It’s worth mentioning that percentage-based padding for top and bottom was treated differently for flex items in old versions of Firefox. Firefox used the height, rather than the width, of an element to determine the padding’s value. This [issue got fixed](https://www.bram.us/2017/07/30/vertical-marginspaddings-and-flexbox-a-quirky-combination/) in Firefox 61.
+
+## Width Property
+
+Setting width is one of the most important things in web design. We can set a width explicitly or implicitly. In this section, we’ll go over cases in which `width` might be confusing.
+
+### Inline Elements Don’t Accept a Width or Height
+
+An inline element such as `span` won’t accept the `width` or `height` property. This can be confusing. An element accepts `width` and `height` only if its display is set to something other than `inline` (such as `inline-block` or `block`).
+
+### Fixed Width Is Not Recommended
+
+When a fixed width is used on an element, there is a high probability that it will cause horizontal scrolling on mobile. Using `max-width` is better because it will prevent the element from being wider than the viewport.
+
+![image-20250325221623405](/img/image-20250325221623405.png)
+
+Here we have a list of headings, along with a description. The description needs to have a maximum width to keep the number of characters per line easy to read. If you use a fixed width for the text, you’ll notice horizontal scrolling on mobile. I spent five minutes wondering about the reason for the issue, before identifying a fixed width as the culprit.
+
+### Full Width for Image
+
+By default, an HTML `img` will be sized according to its content. To prevent an image from being larger than the viewport, we can set the `width` property.
+
+```css
+img {
+  width: 100%;
+}
+```
+
+With `width: 100%`, an `img`’s width will be equal to its parent’s width. However, sometimes we don’t want that behavior. Here is a better alternative, which is to set `max-width`.
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+The method above ensures the following:
+
+- A small image (say, 650 by 250 pixels) won’t take up the full width of a wide parent (say, 1500 pixels). Imagine such an image taking up that container! It would look pixelated.
+- On the other hand, if an image is wider than the viewport, then its width would be equal to 100% of its parent.
+
+### Using `100%` vs. `auto` for Width
+
+The initial width of block-level elements such as `div` and `p` is `auto`, which lets the elements take up the full width of their parent. In some cases, you might need a `div` not to take up the full width.
+
+```css
+div {
+  width: 50%;
+  margin: 20px;
+}
+@media (min-width: 800px) {
+  div {
+    width: 100%;
+  }
+}
+```
+
+This element’s width is `50%` of its parent. And when the viewport is big enough, we want it to take up the full width. Setting the width to `100%` would cause its contents to take up the full width of its parent without the `margin` being calculated.
+
+![image-20250325221726700](/img/image-20250325221726700.png)
+
+This is a problem. To solve it, we should use `auto` instead of `100%`. According to the CSS specification:
+
+> ‘margin-left’ + ‘border-left-width’ + ‘padding-left’ + ‘width’ + ‘padding-right’ + ‘border-right-width’ + ‘margin-right’ = width of containing block
+
+Notice that when `box-sizing: border-box` is used, `padding-left` and `padding-right` are **not** included in the calculation.
+
+Setting the width to `auto` would result in the width of the content box being the content itself minus the margin, padding, and border.
+
+```css
+@media (min-width: 800px) {
+  div {
+    width: auto;
+  }
+}
+```
+
+I’ve written a [detailed article](https://ishadeed.com/article/auto-css/) about `auto` in CSS that is worth checking out if you want to dig more into the topic.
+
+### An Image With `position: absolute` Doesn’t Need Width or Height
+
+You might not think about this, but it’s interesting to know. Consider the following:
+
+```html
+<div class="media">
+  <img src="cool.jpg" alt="" />
+</div>
+```
+
+```css
+.media {
+  position: relative;
+  width: 300px;
+  height: 200px;
+}
+
+.media img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+```
+
+You might expect that the image will take up the full width of its parent because it is absolutely positioned against the four sides. Well, that would be wrong. If the image is large enough, it will break out of its parent.
+
+To prevent this from happening, set a width and height for the image.
+
+```css
+.media img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+```
+
+## Height Property
+
+### Full Percentage-Based Height
+
+Setting a percentage-based height in CSS might seem intuitive at first, but it’s not. You can’t set a percentage-based height for an element unless the height of its parent is **explicitly** defined.
+
+```css
+.parent {
+  padding: 2rem;
+}
+
+.child {
+  height: 100%;
+}
+```
+
+The child won’t take up the the `100%` of its parent. Here is how to make it take up the full height:
+
+```css
+.parent {
+  height: 200px;
+  padding: 2rem;
+}
+```
+
+This way, the percentage-based height value of the child will be based on something, and it will work as expected, even if using an absolute `height` value is not recommended.
+
+### Filling the Height of the Remaining Space Available
+
+Let's suppose that we have a grid of cards, and we're using CSS grid to lay them out.
+
+```html
+<div class="media-list">
+  <div class="card">
+    <img class="card__thumb" src="thumb.jpg" alt="" />
+    <div class="card__content">
+      <h2><!-- Title --></h2>
+      <p class="card__author"><!-- Author --></p>
+      <p></p>
+    </div>
+  </div>
+  <div class="card"></div>
+</div>
+```
+
+```css
+.media-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(265px, 1fr));
+  grid-gap: 1rem;
+}
+```
+
+By default, CSS grid will make the height of the cards equal, and that's useful. But there is a problem, when one card has a longer title than the other, the `.card__content` element height will be different.
+
+![image-20250325221856372](/img/image-20250325221856372.png)
+
+To solve this, we need to make the card as a flex container, and then force the `.card__content` to fill the available space.
+
+```css
+.card {
+  display: flex;
+  flex-direction: column;
+}
+.card__content {
+  flex-grow: 1;
+}
+```
+
+Now, we want to make the `.card__content` element as a flex container. Finally, the `.card__author` element will be given `margin-top: auto` so it can always be at the baseline of the card.
+
+```css
+.card__content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+.card__author {
+  margin-top: auto;
+}
+```
+
+![image-20250325221932305](/img/image-20250325221932305.png)
+
+### Percentage-Based Width and No Height
+
+Sometimes, you need a way to resize an element without having to change both the width and height. I like a pattern that I found on Twitter’s website, which resizes the avatar by changing only the `width` property.
+
+```html
+<a href="#" class="avatar">
+  <div class="avatar-aspect-ratio"></div>
+  <img alt="" src="me.jpg" />
+</a>
+```
+
+```css
+.avatar {
+  position: relative;
+  width: 25%;
+  display: block;
+}
+
+.avatar-aspect-ratio {
+  width: 100%;
+  padding-bottom: 100%;
+}
+
+.avatar img {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+```
+
+By adding an element ( `.avatar-aspect-ratio` ) with a rule of `padding-bottom: 100%`, which ends up being equal to the `width` of the avatar, the result will be a square. The image itself is positioned absolutely.
+
+![image-20250325222011812](/img/image-20250325222011812.png)
+
+Notice that only the width property is being resized; the height will follow. For more details about the technique, here is a [great article](https://css-tricks.com/fluid-width-video/) on CSS Tricks.
+
+### Height and Viewport Units
+
+We can use a viewport unit with `width` or `height` to make an element take up the full width or height of the viewport. We’ll deal here with the viewport-height unit.
+
+```css
+body {
+  height: 100vh;
+}
+```
+
+This will make the `body` element take up the full height of the viewport. However, Safari on mobile has a problem because it doesn't include the address bar in its calculation, which results in a higher value for the `height`.
+
+One solution is to [get help from JavaScript](https://css-tricks.com/the-trick-to-viewport-units-on-mobile/) by using the `innerHeight` method.
+
+```javascript
+// Get the viewport height and multiply it by 1% to get the vh value.
+let vh = window.innerHeight * 0.01;
+// Set the vh value in the CSS property
+document.documentElement.style.setProperty('--vh', `${vh}px`);
+```
+
+Then, we use that in CSS:
+
+```css
+.my-element {
+  height: 100vh; /* Fallback for browsers that do not support custom properties */
+  height: calc(var(--vh, 1vh) * 100);
+}
+```
+
+By getting the `innerHeight` of the browser, we can use that value in the `height` property.
+
+Here is a solution that doesn’t use JavaScript, which I learned from [@AllingsSmitty](https://twitter.com/AllThingsSmitty/status/1254151507412496384).
+
+```css
+.my-element {
+  height: 100vh;
+  height: -webkit-fill-available;
+}
+```
+
+By using an intrinsic value for the `height`, the browser will fill only the available vertical space. The downside is that this breaks in Chrome because that browser also understands `-webkit-fill-available` and won’t ignore it. My advice is **not to use** this solution until its behavior is consistent in browsers.
+
+## Setting a Minimum or Maximum Width
+
+In CSS, we have the `min-width` and `max-width` properties. Let’s explore the common mistakes and points of confusion that happen with them.
+
+### Minimum Width
+
+#### Minimum Width for Buttons
+
+When setting a minimum width for a button element, keep in mind that it should work across multilingual layouts.
+
+![image-20250325222124553](/img/image-20250325222124553.png)
+
+Here, we have a button with `min-width: 40px`. It works perfectly for English layouts. However, when translated to Arabic, it becomes very small because of its minimum width. This example is from Twitter’s website. The issue here is having a very short width for a button, it will make it harder to the user to notice it.
+
+To prevent such an issue, always test with multiple kinds of content. Even if the website is for one language only, testing with different content won’t hurt.
+
+#### Minimum Width and Padding
+
+Another point of confusion is when we depend only on `min-width`. For example, a button with `min-width` might look good because the content suits the size. However, when the button’s text gets a bit long, the text will run close to the edges.
+
+![image-20250325222151597](/img/image-20250325222151597.png)
+
+The reason for this is that the author is blindly depending on `min-width` and has not considered whether the content might be longer.
+
+#### Which Has Higher Priority: `min-width` or `max-width`?
+
+When using both `min-width` and `max-width` for an element, it might be confusing to know which of them is active. Let’s clarify this.
+
+If the value of `min-width` is greater than that of `max-width`, then it will be taken as a width.
+
+![image-20250325222226006](/img/image-20250325222226006.png)
+
+```css
+.element {
+  width: 100px;
+  min-width: 50%;
+  max-width: 100%;
+}
+```
+
+#### Resetting `min-width`
+
+Let’s explore ways to reset the `min-width` property in CSS.
+
+##### Setting to `0`
+
+The default value of `min-width` is `0`, but this is different for flex child items.
+
+The `min-width` of flex child items is `auto`, as explained previously.
+
+##### Setting to `initial`
+
+The `initial` value will reset to the browser’s initial value, which would be either `0` or `auto`, depending on whether the item is a flex child.
+
+Generally, I recommend using `initial` to reset. However, depending on the use case, you might need to use `min-width: 0` for flex child items.
+
+### Max Width
+
+#### Max Width for Page Wrappers
+
+A common use case for the `max-width` property is to add it as a constraint on an element, such as a page wrapper or container.
+
+```css
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+```
+
+![image-20250325222354252](/img/image-20250325222354252.png)
+
+This might seem OK, until you resize the screen to be narrower than 1200 pixels. Then you’ll notice that the child elements of `.wrapper` are stuck to the left and right edges, which is not what we want. Make sure to add padding to the page container so that it has a horizontal offset on mobile.
+
+```css
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+```
+
+![image-20250325222414906](/img/image-20250325222414906.png)
+
+#### Percentage for Maximum Width
+
+When using a percentage value for the maximum width, it’s common to forget about it on mobile.
+
+![image-20250325222442931](/img/image-20250325222442931.png)
+
+```css
+.element {
+  max-width: 50%;
+}
+```
+
+This might work smoothly on laptops or desktops. However, on mobile, the `50%` could be 150 or 200 pixels, depending on the viewport’s width. Whatever it is, the computed pixel value will be very small, so it’s important to consider mobile sizes.
+
+```css
+@media (min-width: 800px) {
+  .element {
+    max-width: 50%;
+  }
+}
+```
+
+Much better. The media query will activate the `50%` width once there is enough space.
+
+#### Setting a Maximum Width Based on the Content
+
+This could be regarded as either a common mistake or a common need, so I will try to address them as both. Sometimes, you need to set a maximum width based on the content you have. This can be tricky when the content varies. The mistake is setting the width based on the content.
+
+![image-20250325222514820](/img/image-20250325222514820.png)
+
+We have a section with a heading and a description. We want the wrapper to be as wide as the content, so we’ll try setting it in pixels.
+
+```css
+.wrapper {
+  max-width: 567px;
+}
+```
+
+Using a hardcoded value like `567px` in CSS is not a good practice because this fails easily when the content changes. The solution is to use an intrinsic CSS value.
+
+```css
+.wrapper {
+  max-width: max-content;
+}
+```
+
+This way, the width of the wrapper will adjust to the content, without our having to hardcode the value.
+
+#### Constraining an Image in a Wrapper
+
+A common use case for `max-width` is to constrain an `img` not to be bigger than its container. Because the `img` element is a **replaced element**, its size is based on its content.
+
+Sometimes, a large image could extend beyond its container. The solution is simply to use the previously mentioned technique:
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+#### Resetting `max-width`
+
+Suppose we need to reset a CSS property for a particular viewport size or condition. There are a couple of ways to reset `max-width` in CSS.
+
+##### The `none` Keyword Value
+
+The `none` value sets no limit on the size, which is exactly the goal of resetting the property.
+
+##### The `initial` Keyword Value
+
+This sets the property to its initial default value, which is `none`.
+
+##### The `unset` Keyword Value
+
+The `unset` keyword resets the value to the inherited value if the property inherits from its parent. If not, the value will be `initial`.
+
+I recommend using the `none` keyword because it’s the clearest, and you won’t have to think through the consequences.
+
+### Minimum Height
+
+#### Setting a Minimum Height for Variable Content
+
+A common challenge in CSS is setting a fixed height for a section with content that will change or that is inputted by the user. Setting a fixed height might break the section if the content goes too long.
+
+Using `min-height` fixes this. We set a value that would be the minimum height, and if the content grows longer, the height of the section will expand.
+
+![image-20250325222610106](/img/image-20250325222610106.png)
+
+Notice how the content overflows the section vertically. This is because it has a fixed height.
+
+```css
+section {
+  min-height: 450px;
+  /* … instead of… */
+  /* height: 450px; */
+}
+```
+
+This fixes the issue.
+
+#### Setting a Minimum Height for Positioned Elements
+
+Usually, a modal component contains content such as form elements, text, an image, etc. In case the content is too short, the modal height will collapse and the layout will look bad.
+
+![image-20250325222632142](/img/image-20250325222632142.png)
+
+Setting `min-height` is better so that the modal can’t go below that value. Thus, we’ll prevent any unwanted behavior.
+
+```css
+.modal-body {
+  min-height: 250px; /* 250px is just an example. Tweak according to
+your project’s needs. */
+  padding: 16px;
+}
+```
+
+### Maximum Height
+
+#### Setting a Maximum Height for Positioned Elements
+
+Let’s start with this issue because it’s related to the previous one about modal content. What if the modal’s content is too tall? The height of the modal will become equal to the viewport’s height, which is not good.
+
+![image-20250325222737756](/img/image-20250325222737756.png)
+
+So, we should use not only `min-height`, but also `max-height`, so that however tall the content is, it won’t exceed the value we’ve set.
+
+```css
+.modal-body {
+  min-height: 250px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+```
+
+Don’t forget to make the modal scrollable by adding `overflow-y: auto`. Without it, the content will exceed its parent.
+
+#### Setting a Percentage-Based Maximum Height
+
+This one is also related. We set the maximum height in pixels, remember? This will work, but it has a pitfall. What if the viewport’s height is too short and the value of `max-height` is greater than it?
+
+A better solution would be to use a percentage for `max-height`. This way, whatever the length of the content, the height of the modal won’t exceed that value.
+
+```css
+.modal-body {
+  min-height: 250px;
+  max-height: 90%;
+  overflow-y: auto;
+}
+```
+
+#### Transitioning an Element’s Height
+
+A common question I hear is how to transition the height property of an element. Unfortunately, the property is not animatable because often times, we want to animate the height from `0` to `auto`, and the value `auto` is not valid for animation. It’s possible to use JavaScript, by adding height as an inline style and incrementing it.
+
+Here is a CSS solution that is kind of a hack, but it works. By using the `max-height`, we can set a maximum value, and it will transition.
+
+```css
+.element {
+  max-height: 0;
+  overflow: hidden; /* This prevents child elements from appearing
+while the element’s height is 0. */
+  transition: max-height 0.25s ease-out;
+}
+
+.element.is-active {
+  max-height: 200px;
+}
+```
+
+#### Maximum Height Depending on the Element’s Defined Height
+
+If an element has `max-height: 90%`, then it needs one of the following to work:
+
+- a parent or containing block with an explicitly defined `height`,
+- an absolutely positioned element.
+
+When you apply `max-height` with a percentage value, make sure one of the conditions above is met. Otherwise, the computed value will be `none`.
+
+## Shorthand vs. Longhand Properties
+
+As you can guess, a shorthand is the short version of a CSS property, and a longhand is the long one.
+
+```css
+.element {
+  padding: 10px;
+}
+```
+
+This is a shorthand property. This `padding` has four values, all of them being `10px`. We could write the four values like so:
+
+```css
+.element {
+  padding: 10px 10px 10px 10px;
+}
+```
+
+But because they are all equal, there is no need to write them out. The longhand version looks like this:
+
+```css
+.element {
+  padding-top: 10px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+  padding-left: 10px;
+}
+```
+
+When setting a background for an element, it will be either a solid color or an image. We have to be mindful of how we write it. Suppose we write this:
+
+```css
+.element {
+  background: green;
+}
+```
+
+We’ll get a green color, but actually we’re doing this:
+
+```css
+.btn {
+  background-image: initial;
+  background-position-x: initial;
+  background-position-y: initial;
+  background-size: initial;
+  background-repeat-x: initial;
+  background-repeat-y: initial;
+  ... and so on ...
+  background-color: green;
+}
+```
+
+Because `background` is a shorthand property, it will **reset** all other background properties to their initial values when added. This will introduce some confusing bugs to your layout. Use the longhand properties in such situations.
+
+A similar case happened to me multiple times using `margin`.
+
+```css
+.wrapper {
+  margin: 0 auto;
+}
+```
+
+What if we defined `margin-top` and `margin-bottom` for the wrapper earlier? Our new CSS declaration will reset them to `0`. Believe me, when you’ve been working all day and make a mistake like this, you could spend an hour before realizing why this is happening. Use the shorthand properties only when needed, as [CSS Wizardy advises](https://csswizardry.com/2016/12/css-shorthand-syntax-considered-an-anti-pattern/). Here is a proper use:
+
+```css
+.button {
+  padding: 10px 12px 15px 10px;
+}
+```
+
+We might set the `padding` for a button in this way because it has a weird font that is causing some alignment issues.
+
+## Positioning
+
+CSS positioning issues often happen because of incorrect use of the position property, whether because the author doesn’t completely understand it or because of a plain old bug.
+
+### Using the Positioning Offset Properties
+
+When using one of the properties `top`, `right`, `bottom`, or `left`, make sure that the position is not `static`, the default value. If it is, then the `offset` properties won’t have any effect on the element.
+
+### Icon Alignment
+
+Sometimes, aligning an icon to the text beside it is a challenge. Even with properties like `vertical-align` and `flexbox`, it’s still not easy. The reasons for such issues vary, but the most annoying reason is having a font with space above and below its characters. In this case, using `position` is a good solution.
+
+![image-20250325222910743](/img/image-20250325222910743.png)
+
+```css
+.icon {
+  position: relative;
+  top: 3px;
+}
+```
+
+We push the icon 3 pixels towards the bottom. Granted, we are hardcoding the value here, but in this case it’s a valid use. The downside is that when the font changes, the icon’s alignment might break, so be aware of that.
+
+### Using the `width` and `height` Properties
+
+I have come to notice an unnecessary pattern of using the `width` or `height` properties for positioned elements.
+
+```css
+.element {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+```
+
+This element is already positioned to the four sides. It’s already taking up the full space, so setting the width and height is not needed.
+
+**Reminder:** This doesn’t apply to HTML replaced elements such as `img`. If the element above was a large image, then the width and height would be needed, otherwise you could expect horizontal scrolling.
+
+### How Padding Works for Positioned Elements
+
+A positioned element can have spacing that offsets it from the four sides of its parent element. If we want an element to have a 10-pixel offset, then each property of `top`, `right`, `bottom`, and `left` should have a value of `10px`.
+
+There are some tricky situations involving the padding and offset properties.
+
+![image-20250325223007048](/img/image-20250325223007048.png)
+
+Here we have a card with a footer that is offset from the left, right, and bottom sides by 12 pixels. How would we do that in CSS?
+
+```css
+.card-footer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 0 12px 12px 12px;
+}
+```
+
+We position the footer to the four sides, and we rely on `padding` instead of the offset properties for the 12 pixels. This way, it’s easier to control when testing. You might need to tweak the `padding` value.
+
+### Using `z-index`
+
+The `z-index` property is responsible for setting the order of positioned elements and their descendants on the z-axis. It doesn’t work unless position is set to something other than `static` or if the element has properties that trigger a new stacking context like: `transform`, `opacity` less than one, and others. We will get into that later.
+
+### Resetting the Position
+
+Resetting the position of an element from `absolute` or `fixed` to another value can get confusing. For instance, if we have an element that should be `absolute` only on mobile, we could do the following:
+
+```css
+.element {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+@media (min-width: 700px) {
+  .element {
+    position: static;
+  }
+}
+```
+
+Setting the value to `static` will reset the value of `position`. When that is done, keeping the values of `top`, `right`, `bottom`, and `left` is fine because they won’t have any effect.
+
+## The `z-index` Property
+
+The `z-index` property enables us to control how HTML elements are positioned on top of each other, using numeric values. At first, it might seem that positioning an element on top of its siblings or parent is as simple as setting `z-index` to `999999`. That’s not always the case — `z-index` has certain rules to be followed. Let’s explore the most common issues with it.
+
+### Forgetting to Set the Position
+
+The `z-index` property won’t work with position’s default value of `static`. The value must be `relative`, `absolute`, `fixed`, or `sticky`. Make sure to set a position or to double check that stacking context exists.
+
+### Default Stacking Order
+
+In HTML, an element that sits at the bottom of a container will be positioned above the preceding elements.
+
+```html
+<div class="home">
+  <!-- ::before element -->
+  <div class="floor"></div>
+  <div class="desk"></div>
+  <div class="laptop"></div>
+  <!-- ::after element -->
+</div>
+```
+
+![image-20250325223056413](/img/image-20250325223056413.png)
+
+Hopefully, this real-life example makes it clearer. The laptop is on the desk, and the desk is on the floor. That is, the last child will be positioned on top of its siblings by default. Without understanding this, things might get confusing.
+
+The same goes for pseudo-elements. In the HTML markup, notice how the `::before` and `::after` pseudo-elements are added to the `.home` element. The `::after` element will appear in the layout on top by default, and the `::before` element will appear under everything else in a normal stacking context.
+
+### CSS Properties That Create a Stacking Context
+
+Some properties will trigger a new stacking context. The CSS specification lists the properties that trigger a stacking context. They include a position value other than `static`, `opacity`, `transform`, `filter`, `perspective`, `clip-path`, `mask`, and `isolation`.
+
+```html
+<div class="elem-1"></div>
+<div class="elem-2"></div>
+```
+
+```css
+.elem-1 {
+  position: absolute;
+  left: 10px;
+  top: 20px;
+}
+
+.elem-2 {
+  opacity: 0.99;
+}
+```
+
+Which element will appear on top of the other? In this case, `elem-2` will be on top, because adding the `opacity` value will trigger a new stacking context, thus putting `elem-2` on top of `elem-1`, even though `elem-1` is absolutely positioned.
+
+![image-20250325223127123](/img/image-20250325223127123.png)
+
+When `z-index` is not behaving as expected, check whether any properties have triggered a new stacking context.
+
+### An Element Can’t Appear Above Its Parent’s Siblings
+
+For this issue, let’s start with the HTML first, so that you can imagine it better.
+
+```html
+<div class="wrapper">
+  <!-- other content -->
+  <div class="modal"></div>
+</div>
+<div class="help-widget"></div>
+```
+
+```css
+.wrapper {
+  position: relative;
+  z-index: 1;
+}
+.modal {
+  position: fixed;
+  z-index: 100;
+}
+
+.help-widget {
+  position: fixed;
+  z-index: 10;
+}
+```
+
+From the markup, can you tell which element will be on top? It’s tempting to think that the `.modal` element will be on top because it has a higher `z-index`, right?
+
+![image-20250325223309752](/img/image-20250325223309752.png)
+
+Wrong. The `.modal` element is a child of `.wrapper`, and the `.help-widget` element is a sibling of `.wrapper`. Positioning `.modal` above `.help-widget` is not possible unless we change the markup:
+
+```html
+<div class="wrapper">
+  <!-- other content -->
+</div>
+<div class="modal"></div>
+<div class="help-widget"></div>
+```
+
+Thus, we can position `.modal` above `.help-widget`. As a rule of thumb, if you have an element such as a modal or popup, keep it outside of the page’s main wrapper, to avoid such confusion.
+
+### An Element Floating Above Its Siblings
+
+One tricky case is when an element has a higher `z-index` than a fixed header. This issue can easily trip us up because it isn’t easy to notice.
+
+![image-20250325223340059](/img/image-20250325223340059.png)
+
+These cards have a blue element positioned absolutely in the top-left corner (they might indicate the category of the card). When the user scrolls down, the category will scroll above the fixed header. Fixing this is simple: You just need to set an appropriate `z-index` value.
+
+## The calc() Function
+
+CSS’ `calc()` function allows us to calculate the values of certain CSS
+properties. A common mistake with writing `calc()` is omitting spaces.
+
+```css
+.element {
+  width: calc(100%-30px); /* Invalid */
+}
+```
+
+This value is invalid. You must add spaces around the subtraction symbol.
+
+```css
+.element {
+  width: calc(100% - 30px); /* Valid */
+}
+```
+
+## Text Alignment
+
+### Forgetting to Center a Button’s Content
+
+Suppose you would like to add some CSS classes to an HTML `button` or to an `a` link that is functioning like a button. A `button`’s content is centered by default, but an `a` element is not. So, you should center the latter manually.
+
+![image-20250325223409012](/img/image-20250325223409012.png)
+
+```html
+<button class="button" type="submit">Submit</button>
+<a class="button" href="/debugging-css">Read more</a>
+```
+
+```css
+.button {
+  /* Other styles */
+  text-align: center;
+}
+```
+
+Without doing this, you might be surprised to find later that some buttons on your website are left-aligned!
+
+## Viewport Units
+
+### Using height: `100vh` Is Risky
+
+When you add height: `100vh` to, say, a hero element, the elements within it might look fine when the viewport is tall enough. I was once browsing someone’s website on a 15-inch laptop. The hero section took up `100%` of the viewport’s height. It looked great!
+
+I got curious and opened up the DevTools to see how it’s built, and — boom! — the hero section broke. The elements within it overlapped the next section. The elements in the hero section didn’t fit the available height once I opened the DevTools. Why? It’s because when `100vh` is used, shrinking the browser’s height will reduce the height.
+
+![image-20250325223431349](/img/image-20250325223431349.png)
+
+Speaking of which, the DevTools can be annoying when you’re testing for the viewport’s height. I usually unlock the DevTools to a separate window when debugging for the viewport’s height.
+
+## Pseudo-Elements
+
+CSS pseudo-elements are one of the most useful additions to CSS. Misusing them can be confusing, so let’s explore some common issues with them.
+
+### Forgetting the `content` Property
+
+The core of a pseudo-element is the `content` property. We often forget about it and set the following:
+
+```css
+.element::before {
+  display: block;
+  background: #ccc;
+}
+```
+
+Then, we wonder why the element does not appear. I’ve spent some time fixing such a bug. To avoid this, make sure that the `content` property is the first thing you add when creating a pseudo-element, before rushing on to other properties.
+
+### Using Width or Height
+
+The default `display` value of a pseudo-element is `inline`. So, when you add a width, height, vertical padding or vertical margin, it won’t work unless the display type is changed to a value other than `inline`.
+
+```css
+.element::before {
+  content: '';
+  background: #ccc;
+  width: 100px;
+  height: 100px; /* Neither the width nor height will work. */
+}
+```
+
+### Using Pseudo-Elements With Grid or Flexbox
+
+When you apply `display: flex` or `display: grid` to a container, any pseudo-element within it will be treated as a normal element. That might be confusing and could cause unexpected issues.
+
+One common issue I remember is applying `display: flex` to the `.row` element in Bootstrap 3. Because the columns were built with the float property, the `.row` element had `::before` and `::after` pseudo-elements:
+
+```css
+.row::before,
+.row::after {
+  content: '';
+  display: table;
+}
+```
+
+This is the “clearfix” hack, which fixes the layout of floated elements without the addition of presentational markup.
+
+When flexbox is applied to the `.row` element, the two pseudo-elements will be treated as normal elements, and that can create some weird spaces in the layout. In such a case, the pseudo-elements wouldn’t have any benefit, so they should be hidden.
+
+```css
+.row::before,
+.row::after {
+  display: none;
+}
+```
+
+### When to Use `::before` and When to Use `::after`
+
+The `::before` pseudo-element becomes the first child of its parent, whereas `::after` is added as the last child. You might wonder whether this is useful?
+
+Here is a common use case for pseudo-elements, which is to absolutely position an overlay on top of a card component. In this case, it would matter whether you use `::before` or `::after`, because one of them will be easier to deal with. Can you guess which? Consider the following example:
+
+![image-20250325223609237](/img/image-20250325223609237.png)
+
+```html
+<article class="card">
+  <img src="article.jpg" alt="" />
+  <h2>Title here</h2>
+</article>
+```
+
+We need to add a gradient overlay to make the text easy to read. The stacking order of absolutely positioned elements (the title and the `::after` element) starts from bottom to top. The element at the very bottom, the `h2`, will appear on top of the image. If we use `::after` for the gradient overlay, it will be the last element, which will put it on top of everything, so we would need to use `z-index: -1` to move it below the title.
+
+However, if we use `::before`, then the gradient would appear below the title by default, without any adjustment to the `z-index`. Thus, we save additional work and avoid a bug.
+
+```css
+.card::before {
+  content: '';
+  /* The CSS for the gradient overlay */
+}
+```
+
+## Color
+
+The `color` property is an important one in CSS because it sets the color of text elements. It might sound simple, but it’s not. Using it incorrectly can cause problems and additional work.
+
+### The `transparent` Keyword
+
+The `transparent` keyword is a shortcut for `rgba(0, 0, 0, 0)`. Some browsers compute it as black with an alpha value of `0`. This can make a transparent gradient look a bit black-ish.
+
+![image-20250325223653917](/img/image-20250325223653917.png)
+
+This behavior was seen in old versions of browsers such as Chrome and Safari. To prevent this, avoid using the `transparent` keyword, especially with CSS gradients. To solve the issue, it's recommend to use the following:
+
+```css
+.element {
+  background: linear-gradient(to top, #fff, rgba(0, 0, 0, 0));
+}
+```
+
+### Not Taking Advantage of the Cascade
+
+By default, the `color` property is inherited by child elements such as `p` and `span`. Instead of setting the `color` property on each element, add it to the `body` element, and then all `p` and `span` elements will inherit that color, unless you override it.
+
+```css
+body {
+  color: #222; /* All elements will inherit this color. */
+}
+```
+
+However, the `a` element doesn’t inherit color by default. You can override its color or use the `inherit` keyword.
+
+```css
+a {
+  color: #222; /* … or… */
+  color: inherit;
+}
+```
+
+I consider a developer not taking advantage of the cascade to be a bug because it’s so important. Why add more CSS than you need to?
+
+### Forgetting the Hash Notation
+
+The hash notation that comes before a color’s hex value is important. I’ll often copy and paste a color from a design app such as Adobe Experience Design (XD) or Sketch. When coping from Sketch, the color is copied like `275ED5`, whereas Adobe XD adds the hash: `#275ED5`. This difference can lead to unexpected results if you are not 100% focused.
+
+```css
+a {
+  color: 275ed5; /* Forgetting the hash */
+  color: ##275ed5; /* Doubling the hash */
+}
+```
+
+Notice the hash incorrectly doubled in the second rule. While working on a project, you might paste the color value with the hash, and then, after editing the color in another app, you might double-click on the value (including the hash) and blindly paste it back in the CSS, leading to a double hash.
+
+![image-20250325223809698](/img/image-20250325223809698.png)
+
+Avoiding such an issue is possible with a style linter, of course. However, it’s important to train ourselves to keep an eye when copying and pasting things into a code editor.
+
+## CSS Backgrounds
+
+Backgrounds in CSS are commonly used to add a background color, to add an image, or for decoration. Let’s explore some issues with them.
+
+### The Order of the Background’s Size and Position
+
+In the shorthand of the `background` property, writing out the background size and position can be confusing. They have a certain order, separated by a slash. If the order is missed, the `background`’s entire definition will become invalid.
+
+According to Mozilla Developer Network (MDN):
+
+> The `<bg-size>` value may only be included immediately after `<position>`,
+> separated with the '/' character, like this: "center/80%".
+
+```css
+background: url('image.png') center/50px 80px no-repeat;
+```
+
+Notice the `center/50px 80px`. The first one is for `background-size`, and the second is for `position`. The order can’t be reversed. Spaces around the slash are fine.
+
+### Don’t Use the Shorthand to Set a Color Only
+
+It might be tempting to use the shorthand of `background` to add a background color, but it’s not advisable because this will reset all other background-related properties with it.
+
+### Dynamic Background
+
+If the background is being set with JavaScript, use the dedicated properties for `background-size`, `position`, and `repeat`. The `background-image` is the only property that needs to be set dynamically with JavaScript. If you set the whole background with JavaScript, that will be a lot of unnecessary work.
+
+### Forgetting About `background-repeat`
+
+When setting a background, we can easily forget about `background-repeat`. For instance, the background of a section might look good on a 15-inch laptop, but it might repeat on a 27-inch desktop. Remember to specify whether the background should repeat.
+
+```css
+.element {
+  background: url('image.png') cover/center no-repeat;
+}
+```
+
+Generally speaking, I recommend to combine both the longhand and shorthand properties. See below:
+
+```css
+.element {
+  background: url('image.png') center no-repeat;
+  background-size: cover;
+}
+```
+
+### Printing CSS and Backgrounds
+
+CSS backgrounds are not included in print by default. We can override that behavior and force backgrounds to be included in print by using the following CSS property:
+
+```css
+.element {
+  background: url('cheesecake.png') center/cover no-repeat;
+  -webkit-print-color-adjust: exact; /* Forces the browser to render
+  the background in print mode */
+}
+```
+
+## CSS Selectors
+
+Targeting and styling HTML elements is a core skill of web developers. If we don’t learn how to properly use CSS selectors, we will run into bugs.
+
+### Forgetting the Dot Notation for Classes
+
+Selecting an element by class name won’t work without the dot notation. This often happens when we are not focused.
+
+```css
+button-primary {
+  /* The styles won’t work. */
+}
+```
+
+### Grouping Selectors
+
+Here is an interesting bug that you might not think about it. Grouping a valid and invalid selector together can lead to the whole declaration being ignored.
+
+```css
+a,
+..button-primary {
+}
+```
+
+According to the [CSS specification](https://www.w3.org/TR/selectors/#grouping):
+
+> If just one of these selectors were invalid, the entire selector list would be invalid.
+
+The `..button-primary` class has two dot notations, which makes it invalid. Grouping it with the `a` element would make the browser ignore the entire declaration.
+
+This mistake is easily made when selecting the `::selection` pseudo-element (to target selected text) or the `::placeholder` pseudo-element (to target input placeholders). We also see it in vendor-prefixed selectors, used for cross-browser support; when one vendor-prefixed selector of a group is incorrect, the whole style declaration will be ignored.
+
+### Calling a CSS Selector More Than Once
+
+A common mistake with CSS specificity is calling a selector more than once.
+
+```css
+.title {
+  /* Some styles */
+}
+/* 300 lines and.. */
+.title {
+  /* Another style */
+}
+```
+
+This alone is not a bug, but it easily opens the way for bugs. Avoid this pattern, and use a style linter that warns about such things.
+
+### Customizing an Input’s Placeholder
+
+Firefox makes placeholder text of input elements semi-transparent. When setting a custom color for placeholder text, keep in mind that it will appear a bit dimmed. This is not good for accessibility. Make sure to fix that by resetting the semi-transparency:
+
+```css
+::-webkit-input-placeholder {
+  color: #222;
+  opacity: 1;
+}
+::-moz-placeholder {
+  color: #222;
+  opacity: 1;
+}
+:-ms-input-placeholder {
+  color: #222;
+  opacity: 1;
+}
+```
+
+### The Order of User-Action Pseudo-Classes
+
+The order of the `:visited`, `:focus`, `:hover`, and `:active` pseudo-classes is important. If they don’t appear as follows, then they won’t work as expected:
+
+```css
+a:visited {
+  color: pink;
+}
+a:focus {
+  outline: solid 1px dotted;
+}
+a:hover {
+  background: grey;
+}
+a:active {
+  background: darkgrey;
+}
+```
+
+### Targeting an Element With More Than One Class
+
+A common mistake that I see among beginners is incorrectly targeting two classes at the same time in order to select an element. Consider the following:
+
+```html
+<div class="alert success"></div>
+<div class="alert danger"></div>
+```
+
+```css
+.alert.success {
+  background-color: green;
+}
+.alert.danger {
+  background-color: red;
+}
+```
+
+The first style will work with elements that have both `.alert` and `.success` classes, while the second one will work only with elements that have both `.alert` and `.danger` classes. However, suppose we did the following:
+
+```css
+.alert .success {
+  background-color: green;
+}
+```
+
+The mistake here is **adding a space** between the two classes. This space changes the whole thing, and it won’t work. We are basically selecting an element with a `.success` class inside an element with an `.alert` class. It assumes an HTML structure like the following:
+
+```html
+<div class="alert">
+  <div class="success"></div>
+</div>
+```
+
+Use the correct selector, or else you could waste a lot of time wondering why it’s not working.
+
+### Targeting Classes on Particular Elements
+
+Accessibility of a website to all users is a core principle of website design. Neglecting it can lead to bad results. A common problem we see is using a `div` element for a button and making it clickable only with JavaScript.
+
+One way to prevent developers who you are working with from adding a class to any element and calling it a button is by targeting classes together with their elements.
+
+```css
+button.btn {
+}
+```
+
+This way, the `.btn` class won’t work on any element except the button element. It’s a good way to restrict usage of the class to actual button elements.
+
+### An Alternative to `!important`
+
+Sometimes, a style won’t work because it’s being overridden by another style in the CSS file. Using `!important` is not recommended. Here is a better way, with CSS classes only.
+
+```css
+.btn.btn {
+}
+```
+
+Calling a class twice increases the **specificity** of a selector, thus making the rule work without `!important`. Make sure there is no space between the classes. Note that you can call it three, four, or however many times you like.
+
+## CSS Borders
+
+### Border on Hover
+
+A common mistake when showing a border on hover is to add the border only on hover. If the border is 1 pixel, then the element will jump by that much when the user hovers over it. To avoid the jump, add the border to the normal state with a transparent color.
+
+```css
+.nav-item {
+  border: 2px solid rgba(0, 0, 0, 0);
+}
+.nav-item:hover {
+  border-color: #222;
+}
+```
+
+This way, the border has already been added and is reserving space, and the appearance of the border on hover will be based on `border-color`.
+
+We see this often with inline navigation menus, where items should have a border on hover. Notice in the figure how the elements are slightly pushed to the right once the navigation item is hovered over.
+
+### Multiple Borders
+
+When you add more than one CSS border to an element — for example, borders on the left and bottom edges — you might notice that the point where the two borders meet is kind of weird. The bottom end of the left border and the left end of the bottom border will look like cut-off triangles.
+
+![image-20250325224211829](/img/image-20250325224211829.png)
+
+This is normal and expected. CSS borders work like that. If you want multiple borders, then you could combine a border with a shadow to fix the issue. The left border can be kept as it is, and the bottom one can be a shadow.
+
+### Border and `currentColor` keyword
+
+This is not necessarily a bug, but worth mentioning. The `currentColor` keyword is the default value of `border-color`.
+
+```css
+.element {
+  color: #222;
+  border: 2px solid;
+}
+```
+
+Notice that a color isn’t declared in the border rule. The default value is `currentColor`, which inherits its value from the `color` property. Our example could be written out as follows:
+
+```css
+.element {
+  color: #222;
+  border: 2px solid currentColor;
+}
+```
+
+The point is that adding a color to the border rule is **not necessary** when it’s the same value as `color`.
+
+### Border Transition on Hover
+
+There are many ways to transition a border with CSS. One common way is to modify `border-width`. Suppose we have two buttons:
+
+![image-20250325224307413](/img/image-20250325224307413.png)
+
+We want to expand the border of the first one, so we use `border-width`. Hovering over the button will shift the position of the other button because of the expanded border width. There are two main problems with this approach:
+
+- The transition is slow. That is, the browser will not smoothly animate the width. Instead of increasing it like `1, 1.1, 1.2 … 3`, it will increase like `1, 2, 3`. This is stepped animation.
+- It’s also bad for performance. A change to `border-width` will trigger a repaint of the layout in the browser. The sibling button will move around because of the new border width. With each frame of the animation, the browser will repaint their positions.
+
+The preferable solution is to use `box-shadow`. A shadow is much easier to transition, and performance is good enough.
+
+Suppose we want to animate the bottom width of an element’s border from 3 to 6 pixels. To do that, we can use `box-shadow`, working with its `y` value as an alternative to `border-width`.
+
+```css
+:root {
+  --shadow-y: 3px;
+}
+.element {
+  box-shadow: 0 var(--shadow-y) 0 0 #222;
+  transition: box-shadow 0.3s ease-out;
+}
+.element:hover {
+  --shadow-y: 6px;
+}
+```
+
+Going further, I defined a CSS variable to hold the `y` value of the shadow, and I changed that on hover. Using a CSS variable, instead of copying the whole `box-shadow` rule again, reduces redundancy in the code.
+
+### Changing a Border’s Width Based on Screen Size
+
+A `border-width` that works for laptop or desktop screens might be too big for mobile. Usually, we would use a media query to change `border-width` at a certain screen size. While that works, with the CSS tools available today, we have better alternatives.
+
+![image-20250325224347114](/img/image-20250325224347114.png)
+
+By using CSS’ comparison function, we can create a shadow that respond to screen size without having to use a media query.
+
+```css
+.element {
+  border: min(1vw, 10px) solid #468eef;
+}
+```
+
+The `border-width`’s maximum value will be 10 pixels, and it will get smaller as the screen narrows.
+
+### Adding a Border to Text Content
+
+When I started learning CSS, I thought it was possible to add a border to text. It’s not. This might trip up anyone who is new to CSS. However, it is doable with the `text-stroke` or `text-shadow` property. Let’s explore both solutions.
+
+![image-20250325224406957](/img/image-20250325224406957.png)
+
+The most common solution is to set `color` to `transparent` and then add the border.
+
+```css
+.element {
+  color: transparent;
+  -webkit-text-stroke: 1px #000;
+}
+```
+
+While this works, the text will be inaccessible in unsupported browsers, such as Internet Explorer and old versions of Chrome, Firefox, and Safari.
+
+We can use CSS’ `@supports` query to detect whether `-webkit-text-stroke` is supported and, if so, use it.
+
+```css
+@supports (-webkit-text-stroke: 1px black) {
+  .element {
+    color: transparent;
+    -webkit-text-stroke: 1px #222;
+  }
+}
+```
+
+Also, we can replace `color: transparent` with something else.
+
+```css
+@supports (-webkit-text-stroke: 1px black) {
+  .element {
+    -webkit-text-fill-color: #fff;
+    -webkit-text-stroke: 1px #222;
+  }
+}
+```
+
+### `border: none` vs. `border: 0`
+
+Both `border: none` and `border: 0` will reset the border to its initial state. It resets `border-width` to `0px` and `border-style` to `none`, and `border-color` will inherit its value from the `color` property.
+
+I would prefer to use `border: 0`. However, if we look at another property such as `box-shadow`, resetting it to `box-shadow: 0` is invalid. This is confusing because you would expect that `0` would reset both of those properties. The `none` keyword works with both, though. I recommend using it instead of `0`.
+
+### Focus Outline
+
+This is not directly related to the `border` property, but it’s easy to confuse `border` and `outline`. For example, a quick search on StackOverflow for “css border” returns a couple of questions whose titles contain “focus border, blue border”. So, I decided to cover it here.
+
+The blue border or outline that appears when an element is focused is not a bug, but rather a feature that helps keyboard users to know where they are, to take action, and more. Its implementation is not consistent across browsers.
+
+![image-20250325224538472](/img/image-20250325224538472.png)
+
+Instead of removing that outline, we can override it with a custom one.
+
+```css
+.nav-item a:focus {
+  outline: dotted 2px blue;
+}
+```
+
+The possibilities are endless. But please don’t remove that outline under any circumstances, because it will affect the accessibility of the website.
+
+## Box Shadow
+
+### A Shadow on One Side of an Element
+
+When you add a shadow in CSS, it will spread out from the four sides of the element by default. I’ve seen a common request in my research for how to add a shadow in one direction.
+
+![image-20250325224628148](/img/image-20250325224628148.png)
+
+With `box-shadow`, the spread value controls the size of the shadow’s area of coverage. By using a negative value, we can add a shadow to one direction of the element.
+
+```css
+.element {
+  /* The value of -5px is the spread of the shadow. */
+  box-shadow: 0 7px 7px -5px #ccc;
+}
+```
+
+### `box-shadow` and `overflow: hidden` Don’t Mix Well
+
+If you need to use `overflow` for an element, and some of its children have a `box-shadow` property, the shadow will be cut off on the left and right sides.
+
+![image-20250325224651905](/img/image-20250325224651905.png)
+
+In this example, the thumbnail’s shadow is cut off on the left and right sides. The reason is that `overflow: hidden` is being applied to the parent element (the card). Avoid using `overflow: hidden` when you want a shadow to be visible on child elements.
+
+### Multiple Box Shadows
+
+Sometimes we need to add multiple shadows to an element. This is supported and can be done without additional HTML elements or pseudo-elements. Each shadow would be separated by a comma.
+
+```css
+.element {
+  box-shadow:
+    0 5px 10px 0 #ccc,
+    0 10px 20px #222;
+}
+```
+
+### White-Space Issue With Box Shadow and Inline Image
+
+Do you remember when we talked about the `display` of an image and how an image has a little white space below it? The reason is that it’s an inline element. That also happens when we use `box-shadow` with the parent of an inline image.
+
+```html
+<div class="img-wrapper">
+  <img src="ahmad.jpg" alt="" />
+</div>
+```
+
+```css
+.img-wrapper {
+  box-shadow: 0 5px 10px 0 #ccc;
+}
+```
+
+![image-20250325224718890](/img/image-20250325224718890.png)
+
+In this example, there is white space below the image, which becomes visible only after the shadow is added. Make sure to reset the `display` value of the image to avoid this issue.
+
+### Box Shadow on Header Element
+
+When the website’s header is directly followed by, say, a hero image, then adding a shadow might be tricky. If you try to add a shadow to the header, it will be covered by the hero section.
+
+![image-20250325224740951](/img/image-20250325224740951.png)
+
+Solving this issue can be done by changing the stacking context of the header element. The easiest solution is to add the following:
+
+```css
+.site-header {
+  position: relative;
+}
+```
+
+Make sure that this fix doesn’t have unintended side effects.
+
+### Shadow on Arrow of Speech Bubble
+
+A common design pattern for tooltips and dropdown menus is to add an arrow that points to the parent element of the tooltip or dropdown menu. There are many ways to make an arrow in CSS, the most common being to create a pseudo-element with a border on one side.
+
+![image-20250325224801169](/img/image-20250325224801169.png)
+
+How do we add `box-shadow` to the arrow? We can simulate a shadow coming from one direction by using a negative value for the x and y values.
+
+```css
+.element::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: -1px -1px 1px 0 lightgray;
+}
+```
+
+### An `inset` Shadow on Image Elements
+
+Suppose we have an image, and we want to add a translucent inner border to it that acts as a fallback, in case the image fails to load.
+
+![image-20250325224822446](/img/image-20250325224822446.png)
+
+The border would also be useful in preventing bright images from blending into light backgrounds. The first solution you might think of is to use an inset `box-shadow`:
+
+```css
+img {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+```
+
+Unfortunately, an inset box-shadow doesn’t work with images. We need a workaround. I learned a few solutions while analyzing [facebook.com’s new design](https://ishadeed.com/article/new-facebook-css/), which we’ll explore below.
+
+#### Using an Additional HTML Element for the Border
+
+With an additional element, we would keep its background transparent and add a border only. The following shows the HTML’s structure and the CSS:
+
+```html
+<div class="avatar-wrapper">
+  <img class="avatar" width="40" height="40" src="avatar.jpg" width="40" alt="" />
+  <div class="avatar-outline"></div>
+</div>
+```
+
+```css
+.avatar-wrapper {
+  position: relative;
+}
+.avatar {
+  display: block;
+  border-radius: 50%;
+}
+.avatar-outline {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+}
+```
+
+#### Using an SVG `image`
+
+Another interesting solution is to use an `svg` element, instead of an `img`. This solution is well supported in browsers and is much easier to control. Here is the HTML:
+
+```html
+<svg role="none" style="height: 100px; width: 100px;">
+  <mask id="circle">
+    <circle cx="50" cy="50" fill="white" r="50"></circle>
+  </mask>
+  <g mask="url(#circle)">
+    <image
+      x="0"
+      y="0"
+      height="100%"
+      preserveAspectRatio="xMidYMid slice"
+      width="100%"
+      xlink:href="shadeed.jpg"
+      style="height: 100px; width: 100px;"
+    ></image>
+    <circle class="border" cx="50" cy="50" r="50"></circle>
+  </g>
+</svg>
+```
+
+Let’s go over the SVG code:
+
+1. We have a `mask` element as a circle.
+2. A `group` follows, containing the `image` itself and a `circle` element. The `circle` element acts as a border, and it will be above the `image`.
+
+```css
+.border {
+  stroke-width: 2;
+  stroke: rgba(0, 0, 0, 0.1);
+  fill: none;
+}
+```
+
+Facebook uses both solutions in its 2020 redesign. The SVG one is used rarely for things like profile pictures and user avatars in the sidebar. The solution with the additional HTML element is used a lot in the social feed, in comments, and more.
+
+## CSS Transforms
+
+### Applying Multiple Transforms
+
+In CSS transforms, we can use one or more transforms on an element. For instance, it’s possible to move an element 10 pixels to the right and then rotate it.
+
+```css
+.element {
+  transform: translateX(10px) rotate(20deg);
+}
+```
+
+Occasionally, you might need to use multiple transforms on an element.
+
+However, sometimes you’ll need one transform on mobile and two on desktop. Here, we run into a common issue.
+
+Let’s say we have a modal that should be centered horizontally on mobile. In larger viewports, it should be centered both horizontally and vertically. A common mistake is to accidentally reset the transform.
+
+```css
+.modal-body {
+  transform: translateX(-50%);
+}
+@media (min-width: 800px) {
+  .modal-body {
+    transform: translate(0, -50%);
+  }
+}
+```
+
+The transform gets an unintended reset with `translate(0, -50%)`. This can easily cause confusion. The solution is straightforward: We need to keep the `translateX(-50%)`.
+
+```css
+@media (min-width: 800px) {
+  .modal-body {
+    transform: translate(-50%, -50%);
+  }
+}
+```
+
+### The Order of CSS Transforms Matters
+
+According to MDN:
+
+> The transform functions are multiplied in order from left to right, meaning that composite transforms are effectively applied in order from right to left.
+
+The order of transform functions is important. Keep an eye on them to avoid issues.
+
+![image-20250325225012217](/img/image-20250325225012217.png)
+
+Notice how the order of the transform functions affects the visual position of each rectangle. In the first one, the element has been scaled first, then transformed 20 pixels to the right. The opposite happens with the second rectangle. When debugging CSS transforms, make sure the order meets your needs. Don’t add transform functions randomly.
+
+### Overriding a Transform by Mistake
+
+When I started to learn CSS, I wasn’t totally aware that the `transform` CSS property can include multiple transforms, and that we need to specify all of the transforms we want every time we declare the property. The following is a bug:
+
+```css
+.element {
+  transform: translateY(100px);
+}
+.element:hover {
+  transform: rotate(45deg);
+}
+```
+
+You might expect that both the `translateY` and `rotate` functions will work, but that’s not so. The second transform will override the first one; thus, we’ll lose `translateY`. Instead, we would combine them:
+
+```css
+.element:hover {
+  transform: translateY(100px) rotate(45deg);
+}
+```
+
+And keep in mind the importance of order, as explained earlier.
+
+### Individual Transform Properties
+
+At the time of writing, only Firefox 72 supports individually declared transforms. That would solve the issue mentioned just above really well, because we wouldn’t have to combine all transforms together. Here is the reworked version of the previous example:
+
+```css
+.element {
+  translate: 0 100px;
+}
+.element:hover {
+  rotate: 45deg;
+}
+```
+
+Isn’t that simpler? You can detect whether this is supported with the `@supports` media query.
+
+```css
+@supports (translate: 10px 10px) {
+  /* Add the individual transform properties */
+}
+```
+
+### Transforming SVG Elements
+
+The coordinate system for HTML elements starts at `50% 50%`. In SVG, it’s completely different; it starts at `0 0`. Because of this difference, using CSS transforms with SVG elements can be confusing.
+
+To transform an SVG element as expected, use pixel values and avoid percentages. And keep in mind that CSS transforms aren’t supported in Internet Explorer but are supported as of Microsoft Edge 17.
+
+Taken from [Ana Tudor on CSS-Tricks](https://css-tricks.com/transforms-on-svg-elements/), the following example illustrates the issue:
+
+```css
+rect {
+  /* This doesn’t work in Internet Explorer and old versions of Edge. */
+  transform: translate(295px, 115px);
+}
+```
+
+```html
+<!-- This works everywhere. -->
+<rect width="150" height="80" transform="translate(295 115)" />
+```
+
+We can use the inline `transform` attribute for an SVG child element. It’s a bit different with the CSS transform, with no comma between the values.
+
+### Using Transforms to Rotate Text by 90 Degrees
+
+I wouldn’t consider this a bug, but rather a question of finding a better way to solve this need. Say we want to rotate a text element.
+
+![image-20250325225108895](/img/image-20250325225108895.png)
+
+The first approach you might consider is positioning the text and rotating it. While this would work, there is a better solution. By using CSS’ `writing-mode`, we can easily change the writing direction from left-to-right to top-to-bottom. The `writing-mode` property sets the direction (horizontal or vertical) of a text element. It was intended for languages such as Japanese and Chinese.
+
+```css
+/* Without writing-mode */
+.title {
+  position: absolute;
+  left: 40px;
+  transform-origin: left top;
+  transform: rotate(90deg);
+}
+/* With writing-mode */
+.title {
+  writing-mode: vertical-lr;
+}
+```
+
+With `writing-mode`, we can rotate the title with one line of CSS. [Browser support](https://caniuse.com/css-writing-mode) is great, too.
+
+## CSS Custom Properties (Variables)
+
+### Scoped vs. Global Variables
+
+A scoped variable is one that can only be used inside an element, whereas a global one, as evident by its name, can be used globally.
+
+```html
+<div class="header">
+  <div class="item"></div>
+</div>
+```
+
+```css
+.header {
+  --brand-color: #222;
+}
+```
+
+We define a variable, `--brand-color`, which will only work with the `.header` element and its child items. An element with a class of `.item` can see the variable.
+
+While researching this topic, I noticed a question that is marked as correct on StackOverflow, but is not actually correct. The answer claims that the following should work:
+
+```css
+.header {
+  --brand-color: #222;
+}
+body {
+  background-color: var(--brand-color);
+}
+```
+
+This will never work. The `body` element can’t see the CSS variable because its scoped to the `.header` element. For this to work, the CSS variable must be defined **globally**:
+
+```css
+:root {
+  --brand-color: #222;
+}
+body {
+  background-color: var(--brand-color);
+}
+```
+
+This works perfectly.
+
+### Setting a Fallback for a Variable
+
+Sometimes when talking about fallbacks for variables, it might be confusing whether we’re referring to a fallback for an old browser that doesn’t support CSS variables or a fallback for the CSS variable itself.
+
+```css
+.title {
+  color: #222;
+  color: var(--brand-color);
+}
+```
+
+The first rule above is a fallback for old browsers, which can be automated using a tool such as PostCSS.
+
+However, our focus here is on a fallback for the CSS variable itself:
+
+```css
+.title {
+  color: var(--brand-color, #222);
+}
+```
+
+If, for some reason, the variable `--brand-color` is not available, then the value after the comma will be used instead. Note that you can use more than one fallback value. See below:
+
+```css
+.title {
+  color: var(--brand-color, var(--secondary-color, #222));
+}
+```
+
+### Retrieving All CSS Variables Defined in a Document
+
+Sometimes, you might want to see all of the global CSS variables in your application or website. Luckily, we can get them from the browser’s DevTools.
+
+Select the `html` element, and on the right side, you should see all CSS variables defined within it.
+
+![image-20250325225200821](/img/image-20250325225200821.png)
+
+The figure highlights how CSS variables look when we inspect the root element of the page (the `html` element). What I like about Firefox is that you can toggle a variable! This can be very useful for debugging or testing the fallback value of a CSS variable.
+
+### Invalidation at Computed-Value Time
+
+A declaration will be invalid at the computed-value time if it uses a valid custom property but if the property value, after substituting the `var()` functions, is invalid. When this happens, the property computes to its initial value. Consider the following example, taken from [Lea Verou’s](https://lea.verou.me/blog/2020/06/hybrid-positioning-with-css-variables-and-max/) blog:
+
+```css
+#toc {
+  position: fixed;
+  top: 11em;
+  top: max(0em, 11rem - var(--scrolltop) * 1px);
+}
+```
+
+If the browser doesn’t support the `max()` comparison function, it will make the property invalid at the computed-value time, which will compute to `initial` ; and for the `top` property, the initial value will be 0 . This will break the design. The fix for this is to use the `@supports` function to detect support for the `max()` function. If it’s supported, then the declaration will be used.
+
+```css
+#toc {
+  position: fixed;
+  top: 11em;
+}
+@supports (top: max(1em, 1px)) {
+  #toc {
+    top: max(0em, 11rem - var(--scrolltop) * 1px);
+  }
+}
+```
+
+## Horizontal Scrolling
+
+This is one of the most common issues in front-end development. Horizontal scrolling is an indication that an element is positioned outside the viewport’s boundaries or that an element is wider than the viewport. The reasons vary. I will try to summarize them here, along with strategies you can use to find and fix the problem.
+
+### Firefox Shows a `scroll` Label
+
+A little assistance worth highlighting is that Firefox shows a “scroll” label for elements that are wider than the viewport. The label will guide you to debug the element that is causing the horizontal scrolling.
+
+![image-20250325225257176](/img/image-20250325225257176.png)
+
+When you click on the `scroll` label, Firefox will highlight the element that is causing the horizontal scrolling.
+
+![image-20250325225311812](/img/image-20250325225311812.png)
+
+The `h2` and `p` elements are causing the horizontal scrolling because they are wider than the viewport. As a result, Firefox highlights them when the “scroll” label is clicked.
+
+### Finding Horizontal Scrolling Bugs
+
+Let’s focus first on how to find horizontal scrolling problems. The first thing to do is to make sure that the scrollbars are shown by default. macOS, for example, doesn’t show the scrollbars until you start scrolling (either vertically or horizontally). Making the scrollbars visible can help us to spot scrolling issues much more quickly.
+
+Go to “System Preferences” > “General” > “Show scroll bars” > “ Always”.
+
+Windows shows the scrollbars by default, so there is no need to do anything there.
+
+#### Scrolling to the Left or Right
+
+On the page you want to test, try scrolling to the left or right with your mouse or trackpad. Keep narrowing the screen, and repeat the process. If there is no scrolling, then activate mobile mode in the DevTools. A horizontal scrolling issue in mobile mode might look like the following:
+
+![image-20250325225341032](/img/image-20250325225341032.png)
+
+This means there is an element wider than the `body` or `html` element.
+
+#### Using JavaScript to Get Elements Wider Than the Body
+
+We can take it further and use a script to detect whether an element is wider than the `body` or `html` element. This can be useful in a large project or one you’re new to.
+
+```js
+[].forEach.call(document.querySelectorAll('body *'), function (el) {
+  if (el.offsetWidth > document.body.offsetWidth) {
+    console.log(el.className);
+  }
+});
+```
+
+Here, we’ve selected all elements inside the `body`, checked whether an element is wider than it, and printed it out.
+
+#### Using `outline`
+
+By using CSS’ `outline` property, we can add an outline around every element in the layout. That can be a great help in revealing any issues. For example, it can reveal whether any elements are taking up more space than allowed for them.
+
+```css
+*,
+*:before,
+*:after {
+  outline: solid 1px;
+}
+```
+
+This works perfectly, but we can take it to the next level with a [script](https://gist.github.com/addyosmani/fd3999ea7fce242756b1) created by Addy Osmani:
+
+```js
+[].forEach.call($$('*'), function (a) {
+  a.style.outline = '1px solid #' + (~~(Math.random() * (1 << 24))).toString(16);
+});
+```
+
+This script will add an outline to every element on the page, with a different color for each one. (Having all outlines in the same color would get a bit confusing in a complex layout.)
+
+![image-20250325225415836](/img/image-20250325225415836.png)
+
+Note that using `outline` is much better than `border`, for a few reasons:
+
+- An `outline` will be added after a border, in case an element has one. In other words, the `outline` won’t take up space because it is drawn outside of the element’s content.
+- Using a `border` might break some design components, in case `box-sizing` is not set to `border-box` or if an element already has a border. It would get confusing.
+- An `outline` won’t be affected by an element’s `border-radius`. All outlines added to the page will be rectangular.
+
+### Fixing Horizontal Scrolling
+
+Now that we’ve identified horizontal scrolling issues, it’s time to learn how to debug them. When you find horizontal scrolling, you might not see the cause of the issue at first glance, so you need to experiment.
+
+Open up the browser’s DevTools and start deleting the main HTML elements one by one, to see whether the scrolling disappears (Hint: you can use `CMD + z` for macOS or `CTRL + z` or Windows to cancel the deletion of an element). Once you see that the scrolling is gone, note the element that you just deleted. Refresh the page, and dig into that element to see what’s there. There could be a few reasons for the horizontal scrolling. Let’s explore them.
+
+#### A Fixed Width
+
+A fixed width will definitely cause horizontal scrolling. For example, the following will cause a bug when the viewport is narrower than 1000 pixels.
+
+```css
+.section {
+  width: 1000px;
+}
+```
+
+To fix this, we need to set a maximum width for the element using `max-width`:
+
+```css
+.section {
+  width: 1000px;
+  max-width: 100%; /* Prevent the element from getting wider than 1000 pixels when the viewport is small. */
+}
+```
+
+#### A Positioned Element With a Negative Value
+
+![image-20250325225452415](/img/image-20250325225452415.png)
+
+An element for which one of the position properties ( `top`, `right`, `bottom`, `left` ) is set to a negative value will cause a horizontal scrolling.
+
+```css
+.element {
+  position: absolute;
+  right: -100px;
+}
+```
+
+The same thing can happen when you use a CSS transform to move an element out of the viewport.
+
+```css
+.element {
+  position: absolute;
+  right: 0;
+  transform: translateX(1500px);
+}
+```
+
+If it's necessary to place an element outside its parent, then it's better to use the following:
+
+- apply a CSS `transform`
+- use CSS `overflow: hidden` on the parent, in case you don't have another choice
+
+#### A Flexbox Wrapper Without Wrapping
+
+When using `flexbox`, the row won’t wrap by default. When the viewport gets small, horizontal scrolling will happen because not enough space is available to show all of the elements on one line. This is a common issue with `flexbox`. To solve it, you need to force wrapping on certain screen sizes.
+
+```css
+.section {
+  display: flex;
+  flex-wrap: wrap; /* Force flex items onto a new line in case not enough space is available. */
+}
+```
+
+![image-20250325225531807](/img/image-20250325225531807.png)
+
+When using CSS grid, there is a possibility of horizontal scrolling. Say we have a grid with columns that are dynamic and that have a minimum width of 200 pixels.
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  grid-gap: 16px;
+}
+```
+
+Everything looks good until the viewport gets narrower. The space isn’t enough, and as a result, horizontal scrolling occurs.
+
+![image-20250325225556349](/img/image-20250325225556349.png)
+
+To fix this, we can apply the grid only when space is enough, using a media query.
+
+```css
+@media (min-width: 400px) {
+  .wrapper {
+    /* The grid goes here. */
+  }
+}
+```
+
+#### A Long Word or Inline Link
+
+If an article has a very long word or link, it can easily cause horizontal overflow if it’s not handled properly.
+
+![image-20250325225620383](/img/image-20250325225620383.png)
+
+As you see, the long word causes horizontal scrolling. The solution is to use the `overflow-wrap` CSS property. It prevents a long word from overflowing its line box.
+
+```css
+.content p {
+  overflow-wrap: break-word;
+}
+```
+
+It’s worth mentioning that the property has been renamed from `word-wrap` to `overflow-wrap`.
+
+#### An Image Without `max-width: 100%`
+
+If for any reason you’re not using a CSS reset file, then you need to make sure that any image on the website doesn’t exceed its parent’s width. To do this, all you need is the following:
+
+```css
+img {
+  max-width: 100%;
+}
+```
+
+You guessed it — forgetting to include that line will cause horizontal scrolling.
+
+## Transition
+
+CSS transitions enable us to animate an element smoothly from one state to another. Let’s explore some common issues with them.
+
+### Transition on Resize
+
+An annoying problem with transitions is seeing elements move and animate when the browser window is resized. This is because you’ve applied the transition to all properties, which breaks the behavior and might even cause performance issues.
+
+```css
+.element {
+  transition: all 0.2s ease-out;
+}
+```
+
+The `all` keyword tells us that the transition will be applied to all properties of the element. This might be OK for one element, but using such a pattern at scale is not recommended. When I started learning about CSS, I got used to making the following mistake:
+
+```css
+* {
+  transition: all 0.2s ease-out;
+}
+```
+
+This bit of CSS adds a transition to every element on the page. Don’t do this, please! It’s not a good idea.
+
+### Transitioning Height
+
+A common need is to transition an element’s height — for example, from `0` to `auto`. The `auto` value would make the height of the element equal the content within.
+
+```css
+.element {
+  height: 0;
+  transition: height 0.2s ease-out;
+}
+
+.element:hover {
+  height: auto;
+}
+```
+
+Unfortunately, this is not possible in CSS. You can’t transition to `auto`. However, there is a workaround. Instead of using `height`, we can use a `max-height` value that is greater than the content’s height. For example, if we have a mobile menu with a height of 200 pixels, then the value of `max-height` should be at least 300 pixels. The reason for the greater value is to make sure that the height of the element never gets to that point.
+
+```css
+.element {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+}
+
+.element:hover {
+  max-height: 300px;
+}
+```
+
+I added `overflow: hidden` to clip any content that might be visible when `max-height: 0` is set on the element.
+
+### Transitioning Visibility and Display
+
+Transitioning the `display` property of an element is not possible. However, we can combine the `visibility` and `opacity` properties to mimic hiding an element in an accessible way.
+
+![image-20250325225732667](/img/image-20250325225732667.png)
+
+Here we have a menu that should be shown on mouse hover and keyboard focus. If we used only `opacity` to hide it, then the menu would still be there and its links clickable (though invisible). This behavior will inevitably lead to confusion. A better solution would be to use something like the following:
+
+```css
+.menu {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease-out,
+    visibility 0.3s ease-out;
+}
+
+.menu-wrapper:hover .menu {
+  opacity: 1;
+  visibility: visible;
+}
+```
+
+CSS’ `visibility` property is animatable. When added in the `transition` group, it will be animated, and the menu will fade in and out nicely, without suddenly disappearing.
+
+## Overflow
+
+The value of the `overflow` property is `visible` by default. Other values are `hidden`, `scroll`, and `auto`.
+
+### overflow-y: auto vs. overflow-y: scroll
+
+When we have a component with a fixed height and scrollable content, using `overflow-y: scroll` is tempting. The downside is that when the content is too short, a scrollbar will be visible on the Windows operating system. For macOS, the scrollbar is hidden by default.
+
+```css
+.section {
+  overflow-y: scroll;
+}
+```
+
+![image-20250325225816568](/img/image-20250325225816568.png)
+
+To fix this and show the scrollbar only when the content goes long, use `auto` instead.
+
+```css
+.section {
+  overflow-y: auto;
+}
+```
+
+![image-20250325225835849](/img/image-20250325225835849.png)
+
+### Scrolling on Mobile
+
+When we have, say, a slider, it’s not enough to add `overflow-x` and call it a day. In Chrome on iOS, we need to keep scrolling and moving the content manually. Luckily, there is a property that enhances the scrolling experience.
+
+```css
+.wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+```
+
+This is called **momentum-based scrolling**. [MDN describes it](https://developer.mozilla.org/en-US/docs/Web/CSS/-webkit-overflow-scrolling) thus:
+
+> where the content continues to scroll for a while after finishing the scroll gesture and removing your finger from the touchscreen.
+
+As an advice, make sure to avoid using `-webkit-overflow-scrolling: touch` for a big scrolling context (e.g. a full page layout) as this might cause some random bugs on Safari iOS.
+
+### Inline-Block Elements With `overflow: hidden`
+
+According to the CSS specification:
+
+> The baseline of an “inline-block” is the baseline of its last line box in the normal flow unless it has either no in-flow line boxes or if its “overflow” property has a computed value other than “visible”, in which case the baseline is the bottom margin edge.
+
+When an `inline-block` element has an `overflow` value other than `visible`, this will cause the bottom edge of the element to be aligned according to the text baseline of its siblings.
+
+![image-20250325225902504](/img/image-20250325225902504.png)
+
+To solve this, change the alignment of the button that has `overflow: hidden`.
+
+```css
+.button {
+  vertical-align: top;
+}
+```
+
+## Text Overflow
+
+The `text-overflow` property sets how text with an overflow is shown. The most common value is `ellipsis`: the text will get clipped, and at the end of it will be three dots, `like this…`.
+
+![image-20250325225922342](/img/image-20250325225922342.png)
+
+The property is sometimes confusing to use. A common hurdle is that a declaration of `text-overflow: ellipsis` does not work as you would expect.
+
+```css
+span {
+  text-overflow: ellipsis;
+}
+```
+
+For `text-overflow` to work, the following is required:
+
+- the element’s `display` type should be set to `block`,
+- the element must have the `overflow` and `white-space` properties set.
+
+```css
+span {
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+```
+
+With these set, it will work as expected. Out of curiosity, I tested other display types, including `inline-block` and `flex`, and none of them work as expected.
+
+## The `!important` Rule
+
+Using the `!important` rule without good reason can cause bugs and waste your time. Why is that? Because it breaks the natural cascade of CSS. You might try to style an element and find that the style is not working. The reason could be that another element is overriding that style.
+
+```css
+.element {
+  color: #222 !important;
+}
+.element {
+  color: #ccc;
+}
+```
+
+The element’s color is `#222`, even though a different color is declared a second time. In a large project, using `!important` randomly can cause a lot of confusion.
+
+Avoid `!important` in general. Here are some things to consider before using it:
+
+- Try to identify the source of the specificity issue with the DevTools.
+- It’s sometimes warranted when you’re working with a third-party CSS file. You might not have any option but to override the external style.
+
+Utility CSS classes have become more popular recently. I would consider these a good justification for `!important`.
+
+```html
+<div class="d-block"></div>
+```
+
+```css
+.d-block {
+  display: block !important;
+}
+```
+
+The `d-block` class sets the element to display as a `block` type. Adding `!important` ensures it will be applied as expected.
+
+## Flexbox
+
+The flexbox layout module provides us with a way to lay out a group of items either horizontally or vertically. There are many common issues with flexbox: Some are done mistakenly by the developer, and others are bugs in a browser’s implementation.
+
+### User-Made Bugs
+
+#### Forgetting `flex-wrap`
+
+When setting an element as a wrapper for flexbox items, it’s easy to forget about how the items should wrap. Once you shrink the viewport, you notice horizontal scrolling. The reason is that flexbox doesn’t wrap by default.
+
+```html
+<div class="section">
+  <div class="item"></div>
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+```
+
+```css
+.section {
+  display: flex;
+}
+```
+
+![image-20250325230112066](/img/image-20250325230112066.png)
+
+Notice how the items aren’t wrapping onto a new line, thus causing horizontal scrolling. This is not good. Always make sure to add `flex-wrap: wrap`.
+
+```css
+.section {
+  display: flex;
+  flex-wrap: wrap;
+}
+```
+
+#### Using `justify-content: space-between` for Spacing
+
+When we use flexbox to make, say, a grid of cards, using `justify-content: space-between` can be tricky.
+
+![image-20250325230135989](/img/image-20250325230135989.png)
+
+The grid of cards above is given `justify-content: space-between`, but notice how the last row looks weird? Well, the designer assumed that the number of cards would always be a multiple of four (4, 8, 12, etc.).
+
+CSS grid is recommended for such a purpose. However, if you don’t have any option but to use flexbox to create a grid, here are some solutions you can use.
+
+##### Using Padding and Negative Margin
+
+```html
+<div class="grid">
+  <div class="grid-item">
+    <div class="card"></div>
+  </div>
+  <!-- + 7 more cards -->
+</div>
+```
+
+```css
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -1rem;
+}
+.grid-item {
+  padding: 1rem 0 0 1rem;
+  flex: 0 0 25%;
+  margin-bottom: 1rem;
+}
+```
+
+Each `grid-item` has padding on the left side, but it’s not needed for the first grid item of each row. To avoid having to use complex CSS selectors, we can just push the wrapper to the left by using a negative margin on the left side.
+
+![image-20250325230210839](/img/image-20250325230210839.png)
+
+##### Adding Empty Spacer Elements
+
+While studying Facebook’s new CSS, I noticed an interesting use case of a spacer element for the problem we are solving now.
+
+![image-20250325230228893](/img/image-20250325230228893.png)
+
+If we have a grid of six items, the last two will be added as empty spacer elements. This ensures that `space-between` works as expected.
+
+```html
+<!-- before -->
+<div class="grid">
+  <div class="grid-item">…</div>
+  <div class="grid-item">…</div>
+  <div class="grid-item">…</div>
+</div>
+
+<!-- after -->
+<div class="grid">
+  <div class="grid-item">…</div>
+  <div class="grid-item">…</div>
+  <div class="grid-item">…</div>
+  <div class="empty-element">…</div>
+</div>
+```
+
+Again, the empty element’s purpose is to keep the spacing working as expected. Of course, this should be done dynamically.
+
+#### Hiding a Flexbox Element in Certain Viewports
+
+Hiding a flexbox element on mobile and showing it on desktop can be tricky.
+
+```css
+.element {
+  display: none;
+}
+@media (min-width: 768px) {
+  .element {
+    display: block;
+  }
+}
+```
+
+You might thoughtlessly type `display: block` because that is the common way to show a hidden element. However, because the element is a flex wrapper, a display value of `block` could break the layout. This mistake could lead to some debugging time.
+
+```css
+@media (min-width: 768px) {
+  .element {
+    display: flex;
+  }
+}
+```
+
+#### Stretched Images
+
+By default, flexbox does stretch its child items to make them equal in height if the direction is set to `row`, and it makes them equal in width if the direction is set to `column`. This can make an image look stretched.
+
+```html
+<article class="recipe">
+  <img src="recipe.png" alt="" />
+  <h2>Recipe title</h2>
+</article>
+```
+
+```css
+.recipe {
+  display: flex;
+}
+img {
+  width: 50%;
+}
+```
+
+A simple online search reveals that this issue is common, and it has inconsistent browser behavior. The only browser that still stretches an image by default is Safari version 13. To fix it, we need to reset the alignment of the image itself.
+
+```css
+.recipe img {
+  align-self: flex-start;
+}
+```
+
+![image-20250325230308168](/img/image-20250325230308168.png)
+
+While Safari version 13 is the only one that has the inconsistent behavior of stretching the image, the `button` element is stretched in all browsers. The fix is the same (`align-self: flex-start`), but small details like this make you think about the weirdness of browsers.
+
+We see a related problem when a flex wrapper has its direction set to `column`.
+
+```html
+<div class="card">
+  <h2 class="card__title"></h2>
+  <p class="card__desc"></p>
+  <span class="card__category"></span>
+</div>
+```
+
+```css
+.card {
+  display: flex;
+  flex-direction: column;
+}
+```
+
+The `.card__category` element will stretch to take up the full width of its parent. If this behavior is not intended, then you’ll need to use `align-self` to force the `span` element to be as wide as its content.
+
+![image-20250325230338410](/img/image-20250325230338410.png)
+
+```css
+.card__category {
+  align-self: flex-start;
+}
+```
+
+#### Flexbox Child Items Are Not Equal in Width
+
+A common struggle is getting flexbox child items to be equal in width.
+
+![image-20250325230356445](/img/image-20250325230356445.png)
+
+According to the specification:
+
+> If the specified `flex-basis` is `auto`, the used `flex-basis` is the value of the flex item’s main size property. (This can itself be the keyword auto, which sizes the flex item based on its contents.)
+
+Each flex item has a `flex-basis` property, which acts as the sizing property for that item. When the value is `flex-basis: auto`, the basis is the content’s size. So, the child item with more text will — you guessed it — be bigger. This can be solved by doing the following:
+
+```css
+.item {
+  flex-grow: 1;
+  flex-basis: 0%;
+}
+```
+
+With that, each child item will take up the same space as its siblings.
+
+#### Setting the Minimum Width to Zero With Flexbox
+
+The default value of `min-width` is `auto`, which is computed to `0`. The `min-width` of a flex item is equal to the size of its contents.
+
+According to the [CSS specification](https://www.w3.org/TR/css-flexbox-1/):
+
+> By default, flex items won’t shrink below their minimum content size (the length of the longest word or fixed-size element). To change this, set the min-width or min-height property.
+
+Consider the following example:
+
+![image-20250325230420478](/img/image-20250325230420478.png)
+
+The person’s name is long, which causes horizontal scrolling. So, we add the following to truncate it:
+
+```css
+.c-person__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+```
+
+The trick is to add `min-width: 0` to the element.
+
+```css
+.c-person__name {
+  /* Other styles */
+  min-width: 0;
+}
+```
+
+Here is how it should look when fixed:
+
+![image-20250325230441017](/img/image-20250325230441017.png)
+
+#### Flex Formatting Context
+
+It’s worth mentioning that when we assign `display: flex` to an element, the flex container establishes a new flex formatting context. Adding `float` won’t work. Moreover, there is no margin collapse for the child items of a flex container.
+
+### Browser Implementation Bugs
+
+Let’s walk through some of the most common issues with flexbox related to incorrect or inconsistent browser implementation.
+
+In this section, I will rely heavily on [flexbugs](https://github.com/philipwalton/flexbugs), a great resource by Philip Walton for all browser bugs related to flexbox.
+
+#### `flex-basis` Doesn’t Support `calc()`
+
+![image-20250325230509728](/img/image-20250325230509728.png)
+
+When using the shorthand version of the flex property, Internet Explorer versions 10 to 11 ignore any `calc()` functions.
+
+```css
+.element {
+  flex: 0 0 calc(100% / 3);
+}
+```
+
+The solution is to write out the longhand version.
+
+```css
+.element {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: calc(100% / 3);
+}
+```
+
+In Internet Explorer 10, the `calc()` function doesn’t work in the longhand `flex-basis` declaration. To work around this, we do the following:
+
+```css
+.element {
+  flex: 0 0 auto;
+  width: calc(100% / 3);
+}
+```
+
+#### Some HTML Elements Can’t Be Flex Containers
+
+![image-20250325230532690](/img/image-20250325230532690.png)
+
+Elements such as `button`, `fieldset`, and `summary` don’t work as flex containers. The flexbugs repository gives the following reason:
+
+> The browser’s default rendering of those element’s UI conflicts with the `display: flex` declaration.
+
+Consider the following example:
+
+```html
+<fieldset>
+  <legend>Enter your information</legend>
+  <p>
+    <label for="name">Your name</label>
+    <input type="text" id="name" />
+  </p>
+  <p>
+    <label for="email">Email address</label>
+    <input type="email" id="email" />
+  </p>
+</fieldset>
+```
+
+```css
+fieldset {
+  display: flex;
+  flex-wrap: wrap;
+}
+```
+
+You would assume that the inputs will be displayed next to each other, right? That’s not the case with this bug. It won’t work. A workaround is to wrap the inputs in another element that can act as a flex container.
+
+```html
+<fieldset>
+  <div class="inputs-group">
+    <!-- inputs -->
+  </div>
+</fieldset>
+```
+
+```css
+.inputs-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+```
+
+This fixes the issue.
+
+The `button` element bug is fixed in Chrome, Firefox, and Safari.
+
+#### Inline Elements Not Treated as Flex Items
+
+All inline elements, including `::before` and `::after` pseudo-elements, don’t work as flex items in Internet Explorer 10. In version 11, this bug was fixed for regular inline elements, but it still affected the `::before` and `::after` pseudo-elements.
+
+```html
+<div class="element"></div>
+```
+
+```css
+.element {
+  display: flex;
+}
+
+.element::before {
+  content: 'Hello';
+  flex-grow: 1;
+}
+```
+
+The `::before` pseudo-element won’t work as a flex item. The workaround is to add a `display` value other than `inline` to the item (for example, `inline-block`, `block`, or `flex`).
+
+```css
+.element::before {
+  content: 'Hello';
+  flex-grow: 1;
+  display: block;
+}
+```
+
+#### Importance Is Ignored in `flex-basis` When `flex` Shorthand Is Used
+
+![image-20250325230617598](/img/image-20250325230617598.png)
+
+In Internet Explorer 10, the `!important` rule doesn’t work with `flex-basis` in the shorthand version.
+
+```css
+.element {
+  flex: 0 0 100% !important;
+}
+```
+
+This won’t work. The `flex-basis` setting of `100%` will be ignored. We need to write out the longhand version.
+
+```css
+.element {
+  flex: 0 0 100% !important;
+  flex-basis: 100% !important;
+}
+```
+
+Note that this bug was fixed in Internet Explorer 11.
+
+#### Centering a Flex Item With `margin: auto` Doesn’t Work With Flexbox Wrapper Set to Column
+
+![image-20250325230640393](/img/image-20250325230640393.png)
+
+You can use the `margin: auto` to center a flex item in its container. In Internet Explorer versions 10 to 11, this feature doesn’t work when the direction of the flexbox wrapper is a column.
+
+```html
+<div class="wrapper">
+  <div class="item"></div>
+</div>
+```
+
+```css
+.wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.item {
+  margin: auto;
+}
+```
+
+Instead of the `.item` being centered, it is rendered according to `align-self: stretch` (the default value). The solution is either to:
+
+- use `align-self: center` on the item itself,
+- use `align-items: center` on the wrapper.
+
+This issue has been fixed in Microsoft Edge.
+
+#### Flex Items Don’t Justify Correctly With `max-width`
+
+![image-20250325230705998](/img/image-20250325230705998.png)
+
+When `max-width` is used for a flex item, in conjunction with `justify-content` on the flex wrapper, the spacing is not calculated correctly.
+
+```css
+.item {
+  flex: 1 0 0%;
+  max-width: 25%;
+}
+```
+
+The expected result here is that the size of the elements would start from `0% (flex-basis)` and won’t be more than `25% (max-width)`. We can achieve the same effect by setting a value for `max-width` instead of `flex-basis`, and we can let it shrink by setting a minimum size (`min-width` for a row direction, and `min-height` for a column direction).
+
+```css
+.item {
+  flex: 0 1 25%;
+  min-width: 0%;
+}
+```
+
+### Firefox’s Flexbox Inspector
+
+Firefox has some great resources for debugging flexbox components in its DevTools. It shows a label of “flex” next to each element that is a flex container. When an element is hovered over in the “Inspector” panel, the information bar (the dark-grey one) shows the type of the flex element.
+
+![image-20250325230734257](/img/image-20250325230734257.png)
+
+The great thing is that the “flex” label is clickable. When it’s clicked, Firefox will highlight the flex layout items. It can also be accessed from the little flexbox icon beside the CSS declaration in the “Rules” panel.
+
+![image-20250325230751768](/img/image-20250325230751768.png)
+
+The highlight is useful when you’re in doubt of how a flexbox layout works. Take advantage of these tools — they enable you to make sure that nothing weird is happening and clear up any confusion about a flexbox container.
+
+## CSS Grid
+
+### Unintentional Implicit Tracks
+
+A common misstep with CSS grid is to create an additional grid track by placing an item outside of the grid’s explicit boundaries. First, what’s the difference between an **implicit** and **explicit** grid?
+
+![image-20250325230813400](/img/image-20250325230813400.png)
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.item-1 {
+  grid-column: 1 / 2;
+}
+.item-2 {
+  grid-column: 3 / 4;
+}
+```
+
+The `.item-1` element has an **implicit** grid track, and it’s placed within the grid’s boundaries. The `.item-2` element has an **explicit** grid track, which places the element outside of the defined grid.
+
+CSS grid allows this. The problem is when a developer is not aware that an implicit grid track has been created. Make sure to use the correct values for `grid-column` or `grid-row` when working with CSS grid.
+
+### A Column With `1fr` Computes to Zero
+
+There is a case in which a column with `1fr` will compute to a width of `0`, which means it’s invisible.
+
+```html
+<div class="wrapper">
+  <div class="item"></div>
+  <div class="item"></div>
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+```
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(50px, 200px)) 1fr;
+  grid-template-rows: 200px;
+  grid-gap: 20px;
+}
+```
+
+We have three items with a minimum of 50 pixels and a maximum of 200 pixels. The last item should take the remaining space, `1fr`. If the sum of the widths of the first three items is less than 600 pixels, then the last column will be **invisible** if:
+
+- it has no content at all,
+- it has no border or padding.
+
+![image-20250325230843045](/img/image-20250325230843045.png)
+
+Keep that in mind when working with CSS grid. This issue might be confusing at first, but when you understand how it works, you’ll be fine.
+
+### Equal `1fr` Columns
+
+You might think that the CSS grid fraction unit, `1fr`, works as a percentage. It doesn’t.
+
+```html
+<div class="wrapper">
+  <div class="item">Item 1</div>
+  <div class="item">Item 2</div>
+  <div class="item">Item 3</div>
+</div>
+```
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 200px;
+  grid-gap: 20px;
+}
+```
+
+![image-20250325230908174](/img/image-20250325230908174.png)
+
+The items look equal. However, when one of them has a very long word, its width will expand.
+
+```html
+<div class="wrapper">
+  <div class="item">Item 1</div>
+  <div class="item">
+    I’m special because I have averylongwordthatmightmakemebiggerthanmysiblings.
+  </div>
+  <div class="item">Item 3</div>
+</div>
+```
+
+![image-20250325230926584](/img/image-20250325230926584.png)
+
+Why does this happen? By default, CSS grid behaves in a way that gives the `1fr` unit a minimum size of `auto` (`minmax(auto, 1fr)`). We can override this and force all items to have equal width. The default behavior might be good for some cases, but it’s not always what we want.
+
+```css
+.wrapper {
+  /* other styles */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+```
+
+Beware that the above will cause horizontal scrolling. See the section on horizontal scrolling for ways to solve it.
+
+### Setting Percentage Values
+
+The unique thing about CSS grid is that it has a **fraction** unit, which can be used to divide columns and rows. Using percentages goes against how CSS grid works.
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 33% 33% 33%;
+  grid-gap: 2%;
+}
+```
+
+Using percentage values for `grid-template-columns` and `grid-gap` would cause horizontal scrolling. Instead, use the `fr` unit.
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-gap: 1rem;
+}
+```
+
+### Misusing `auto-fit` and `auto-fill`
+
+I wouldn’t consider this a bug, but misusing `auto-fit` and `auto-fill` can lead to an unexpected result. Let’s differentiate them first. Take the following grid:
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-gap: 1rem;
+}
+```
+
+Our goal is to have a minimum 200-pixel width for the grid item.
+
+In `auto-fill`, the empty tracks won’t collapse to `0`, thus keeping the space as it is.
+
+In `auto-fit`, the browser will keep a minimum size of 200 pixels, and if space is available, the empty tracks will collapse to `0`. Thus, the grid items will take up the remaining space.
+
+I was working on coding a layout of a new section for a client, and while testing, I found a bug telling me that there was an **empty** space on the right side. I opened up the DevTools and realized that I was using `auto-fill` for the grid.
+
+![image-20250325231002885](/img/image-20250325231002885.png)
+
+### Horizontal Scrolling and minmax
+
+As I mentioned in the section on horizontal scrolling, using `minmax()` without proper testing can cause grid items to be wider than the viewport, which will result in horizontal scrolling.
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-gap: 16px;
+}
+```
+
+If the viewport is narrower than 350 pixels, then horizontal scrolling will occur. We can avoid that by setting up a media query.
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-gap: 16px;
+}
+@media (min-width: 400px) {
+  .wrapper {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  }
+}
+```
+
+This way, the `minmax()` function will be applied only when there is enough space.
+
+#### Browser Implementation Issues
+
+Even though CSS grid is relatively new (being released in March 2017), it can still get challenging, especially when supporting the old version of it released in Internet Explorer 11. To avoid any issues, I recommend using the `@supports` query to detect whether the browser supports the new grid specification.
+
+```css
+@supports (grid-area: auto) {
+  /* CSS grid code goes here */
+}
+```
+
+I used `grid-area` because it’s a part of the new grid specification. With this, Internet Explorer 11 won’t apply CSS grid. Supporting grid in Internet Explorer is not impossible, but you need to stick to its old implementation. [Rachel Andrew](https://rachelandrew.co.uk/archives/2016/11/26/should-i-try-to-use-the-ie-implementation-of-css-grid-layout/) has written about the topic in detail.
+
+## Handling Long and Unexpected Content
+
+The heading of this section echoes [an article](https://css-tricks.com/handling-long-unexpected-content-css/) I wrote for CSS-Tricks. I will revisit that article and list the issues that come up in our daily work. We sometimes put effort into building components without considering how long the content might run. Think about such questions, and decide what to do in those cases.
+
+> When you code CSS, you’re writing abstract rules to take unknown content and organize it in an unknown medium. - [Keith J Grant](https://twitter.com/keithjgrant/status/842728744653676544)
+
+### Forgetting to Set Padding Between Text Label and Icon
+
+In some layouts, we need to add an icon as a CSS background for an accordion element or an input field.
+
+![image-20250325231049192](/img/image-20250325231049192.png)
+
+Notice how the text overlaps the icon. That’s because there is no padding on the right. Fixing this is simple, but finding the bug before a user does is hard. I will explain some techniques to prevent bugs from happening in the next chapter.
+
+```css
+.accordion {
+  padding-right: 50px;
+}
+```
+
+The same thing can happen with an input that has an icon.
+
+![image-20250325231116630](/img/image-20250325231116630.png)
+
+### Long Name in Media Object
+
+“Media object” is a term [coined by Nicole Sullivan](http://www.stubbornella.org/content/2010/06/25/the-media-object-saves-hundreds-of-lines-of-code/). It consists of an image on the left and descriptive text on the right. Without much effort on our part, the text will break onto a new line in case it’s long and there is not enough space for it to fit beside the image. However, if it goes on a new line, it could break the design or look weird.
+
+![image-20250325231140908](/img/image-20250325231140908.png)
+
+There is more than one solution to this problem. The most common are:
+
+- the good ol’ float,
+- flexbox.
+
+Suppose our markup looks like this:
+
+```html
+<div class="card-meta">
+  <img src="author.jpg" alt="" />
+  <div class="author">
+    <span>Written by</span>
+    <h3>Ahmad Shadeed</h3>
+  </div>
+</div>
+```
+
+#### Solution 1: Float
+
+To do this, we would need to float the image to the left and then add a clearfix to account for the issue caused by floats.
+
+```css
+.card-meta img {
+  float: left;
+}
+.card-meta::after {
+  content: '';
+  display: table;
+}
+```
+
+#### Solution 2: Flexbox
+
+Flexbox is better, because we only need to apply it to the parent element.
+
+```css
+.card-meta {
+  display: flex;
+}
+```
+
+This will keep the image and text on the same line. However, we should account for another scenario, which is if we don’t want the person’s name to wrap onto a new line? In this case, `text-overflow` to the rescue.
+
+```css
+.card-meta h3 {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+```
+
+## Wrapping Up
+
+Now that we’ve reached the end of this chapter, I hope you’re more comfortable with the most common CSS properties and their issues. Of course, I haven’t mentioned every single property, but I’ve tried to include the things that you will be addressing in your daily work.
+
+If you’ve gone through the first four chapters carefully, then you will be able to tackle any CSS issue from the start to finish using the techniques you’ve learned.

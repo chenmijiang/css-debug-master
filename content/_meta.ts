@@ -21,6 +21,27 @@ const meta: MetaRecord = {
   overview: {
     title: 'Overview',
   },
+  introduction_to_css_bugs: {
+    title: 'Introduction to CSS Bugs',
+  },
+  environments_and_tools: {
+    title: 'Environments and Tools',
+  },
+  common_bugs: {
+    title: 'Common Bugs',
+  },
+  breaking_layout: {
+    title: 'Breaking Layout',
+  },
+  inconsistency_implementation: {
+    title: 'Inconsistency Implementation',
+  },
+  tips_tricks: {
+    title: 'Tips and Tricks',
+  },
+  acknowledgements: {
+    title: 'Acknowledgements',
+  },
   contact: {
     title: 'Contact',
     type: 'page',

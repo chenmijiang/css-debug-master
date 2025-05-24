@@ -1,0 +1,274 @@
+# Introduction to CSS Bugs
+
+## What is a CSS Bug?
+
+When something is different from what you expect, that is a bug. For example, an icon might not be aligned with its sibling elements, or an image might look weird because it’s stretched (its width and height are not proportional to each other). In some cases, what you view as a bug might actually be what is expected. It could be a feature request, or someone has done it on purpose. For this reason, it’s worth checking and asking the person about the bug in detail.
+
+### Browsers Are Different
+
+Web browsers are different, and not all browsers support everything in CSS. In the course of your work, you might encounter something that looks like a bug in browser X, whereas in browser Y, it works perfectly. That doesn’t mean that browser X is rendering it incorrectly. Sometimes, an issue occurs because a browser vendor has implemented a feature according to the specification, whereas it works in another browser because that vendor didn’t implement it incorrectly.
+
+# How to Fix a CSS Bug
+
+Let’s walk through the basic steps of what to do when you find a CSS bug or someone on your team points out something that is broken on a page you’ve worked on.
+
+### Check the CSS
+
+First, check the CSS that is being used. Are you using some cutting-edge property that is supported only in modern browsers? Or is it something old that would be expected to work in the browser showing the bug?
+
+Is it working in the browser you’re building with? Or perhaps someone else built the website, and you don’t know whether it works? Well, you’ll need to check whether the issue is reproducible in your browser.
+
+### Check Browser Support
+
+Go to [Can I Use](https://caniuse.com/) and check for browser support of the CSS property. If you see that the property is not supported in the browser where the bug appears or that the property is supported only with a vendor prefix, then that might be your answer. Make sure that vendor prefixes are added (if any) and that the browser you are testing supports the CSS property.
+
+### Use the Browser's Developer Tools
+
+Once you establish that the CSS property can be expected to work in the browser that is showing the bug, then it’s time to dig into the browser’s developer tools (DevTools). Before inspecting the element, you will need to determine what type of issue it is. For example:
+
+- Is it a visual issue, such as a misaligned icon?
+- Is it happening within a distinct section or across pages? (The issue could be related to the CSS layout.)
+
+In the next section, we will dig into the details of the types of CSS issues we find and how to debug them using the browser’s DevTools.
+
+
+## CSS Bug Types
+
+Categorizing bugs by type is helpful. For example, is the issue design-related or related to a syntax error? In this chapter, we will go through each type, along with a basic example.
+
+### Visual Design Bug Types
+
+When you implement a design in HTML and CSS, any obvious inconsistencies between the design and the code can be considered bugs. For instance, have you ever noticed an icon misaligned with its text label, or that the page container is either wider or narrower than the one the proposed in the design? All of these can be considered visual design issues that the developer did unintentionally.
+
+The designer might not know CSS, in which case they would probably take screenshots of the issues and send them back to the developer with notes. If the developer has a design background, then they might be able to easily notice those inconsistencies reported by the designer.
+
+Consider the following figure:
+
+![image-20250325001053823](/img/image-20250325001053823.png)
+
+In the navigation design shown above, the first one is the original design, and the second one is the code implementation. The developer put effort into implementing it, but it’s still far from the original design, for a couple of reasons:
+
+- The height is shorter.
+- The font size is smaller.
+- The border radius is less.
+- The border color is different.
+- The shadow is too light.
+
+We’ve already spotted five ways in which the implementation is not similar to the design. On a larger scale, a lot of components and sections will need to be crafted carefully to make the implementation look similar to the design. Not all developers notice these design details.
+
+Moreover, issues with visual design include anything that poses an obstacle to the user without being an actual bug. Some examples are an inaccessible color, a confusing organization of content, a misaligned button, text that makes the layout look weird, and inconsistent behavior between website pages. All of these lead to visual design issues and, by extension, accessibility issues.
+
+### Technical Bug Types
+
+Not all issues are noticeable just by looking at a web page. Sometimes you’re dealing with a syntax error or an incorrect value for a CSS property. Let’s explore the causes of technical issues.
+
+#### Calling an Incorrect File Path
+
+Many a developer have spent hours trying to figure out why some CSS is not working at all, only to realize that the cause is an incorrect path for a CSS file. It could happen because you’re using a CSS preprocessor such as Sass or LESS, which will render a `.css` file. Sometimes, the rendered file’s name is different from the source’s. Always be sure that the linked CSS file is the correct one, especially if you have multiple CSS files.
+
+#### Misnaming a Property
+
+When you make a typo in a CSS property’s name, the browser won’t tell you that directly. CSS doesn’t throw an error when something is wrong. You need to figure it out by using the browser’s DevTools. If you inspect the element, the browser will show the invalid property with a warning triangle and a strike through the name.
+
+I remember working on a simple demo for an article, and I scratched my head trying to figure out why something wasn’t working? It turned out that I had a typo when declaring the opacity property.
+
+```css
+.element {
+  opacity: 0.5;
+}
+```
+
+The reason I didn’t notice this trivial mistake is that I was so distracted and didn’t think quietly about the reason for the bug. Most code editors will warn you when a property name is mistyped. Here is an example from Visual Studio Code:
+
+![image-20250324222007023](/img/image-20250324222007023.png)
+
+#### Using an Invalid Value for a Property
+
+Similar to the last issue, this one happens when you give an invalid value to a CSS property. The value could be a typo or one that doesn’t work with the given property. Consider the following example:
+
+```css
+.element {
+  opacity: 50;
+}
+```
+
+The `opacity` property accepts values from 0 to 1. The author here wants 50% opacity but expresses it as a percentage while forgetting the percentage sign. The browser would ignore this `opacity` property.
+
+#### Using a Property That Depends on Another
+
+Not all properties work on their own. A property might depend on a certain rule, applied either to the element itself or to a parent or child. Consider this:
+
+```css
+.element {
+  z-index: 1;
+}
+```
+
+The `z-index` property won’t work, because it needs a `position` value other than `static`. The browser wouldn’t mark this as invalid, and you’d need to guess why it doesn’t work.
+
+Let’s consider when a rule must be applied to a parent or child:
+
+```css
+.child {
+  position: absolute;
+}
+```
+
+We want the child element to be positioned absolutely to its parent. However, the parent doesn’t have `position: relative`. This will cause the child to be positioned according to the closest parent that is relatively positioned or to the body element.
+
+#### Overriding One Property With Another
+
+Sometimes there is no typo or mistake, but you are overriding one property with another. It’s just how CSS works, but some developers might think a bug occurred. For example, CSS’ minimum and maximum sizing properties can be confusing.
+
+```css
+.element {
+  width: 100px;
+  min-width: 50%;
+  max-width: 100%;
+}
+```
+
+Here, the width of the element would be `50%` of its parent. If you haven’t read the CSS specification carefully, you might think this is an issue, but it’s not.
+
+#### Duplicating a Property
+
+Sometimes you’ll declare a property, and for some reason it doesn’t have an effect on the element. You keep trying and testing with no result. Eventually, you realize that the property is duplicated, and you’re editing the first declaration of it, which is being overridden by the second one.
+
+```css
+.element {
+  display: block;
+  width: 50%;
+  opacity: 1;
+  border: 1px solid #ccc;
+  opacity: 0;
+}
+```
+
+The `opacity` property is defined twice here. This is a mistake, and it can happen for various reasons:
+
+- Maybe you copied some styles to test them quickly and forgot to remove the duplicate.
+- It could simply mean that you’re tired and need to take a break.
+
+Whatever the reason is, it’s a bug.
+
+#### Incorrectly Typing a Class Name
+
+Your CSS could be 100% correct and valid, but one typo in a class name could lead to styles not being applied to the element. As simple as this is, when we are working for eight hours a day, we tend to focus on big problems and might overlook such a small mistake.
+
+#### Neglecting the Cascade
+
+CSS stands for Cascading Style Sheets. As indicated by the name, a website’s styles cascade, and their order matters. If you define a CSS rule for an element and then redefine it at the end of the CSS file, the latter will override the former.
+
+```css
+.element { color: #000; }
+/* 500 lines later… */
+.element { color: #222; }
+```
+
+This is a very simple example of what can happen. You might face a trickier issue than this. Consider an element that should switch colors on mobile and desktop:
+
+```css
+@media (min-width: 500px) {
+  .element {
+    background: #ccc;
+  }
+}
+
+.element {
+  background: #000;
+}
+```
+
+The background color of `.element` would be `#000` because it comes after (and, thus, overrides) the rule in the media query.
+
+#### Forgetting to Bust the Cache
+
+CSS caching happens on the server, not on the local machine. A common problem is pushing an update, and when you refresh the web page, the CSS updates don’t appear. In this case, the CSS file might be cached, and you’ll need to clear the browser’s cache or rename the file after each push.
+
+There are multiple solutions to this problem, the simplest being to add a query string:
+
+```html
+<link rel="stylesheet" href="app.css?v=1.0.0">
+```
+
+And when you make a change, you would also change the version:
+
+```html
+<link rel="stylesheet" href="app.css?v=1.0.1">
+```
+
+Then, the browser would download the latest CSS file. For more information, CSS-Tricks has [a great article](https://css-tricks.com/strategies-for-cache-busting-css/).
+
+#### Neglecting Performance
+
+Using the wrong property for the job can easily impair performance. For example, when animating an element from left to right, the `left` property is a performance killer, because it forces the browser to repaint the layout with each pixel moved.
+
+```css
+.element:hover {
+  left: 100px;
+}
+```
+
+A better solution would be to use the CSS `transform` property. It won’t affect performance, and everything will run smoothly. A simple choice of property can significantly improve performance!
+
+```css
+.element:hover {
+  transform: translateX(100px);
+}
+```
+
+#### Ignoring Specificity
+
+If a CSS rule is not working as expected, the reason could be that its specificity is higher than another’s.
+
+```css
+.title {
+  color: #222;
+}
+
+.card .title {
+  color: #000;
+}
+```
+
+The specificity of `.card .title` is higher than that of `.title`. As a result, the former would be overridden. To fix this, we can add a variant class to the element, and apply the new color to that.
+
+```css
+.card-title {
+  color: #000;
+}
+```
+
+Another possibility is using `!important`. Avoid using this in general because it makes maintaining CSS at scale much harder. Use it judiciously and only when needed.
+
+## The Debugging Process
+
+As we’ve seen, there are many categories of CSS issues. Some are visual, and others non-visual. Now that we’ve finished listing the common types, the next step is to figure out how to debug, using the various tools and techniques at our disposal.
+
+## Getting Browser Information From Non-Technical People
+
+Suppose that a user reports an issue on your website. As the front-end developer, you’ve checked your own browser, and everything is OK. So, the issue is appearing only in the user’s browser. In such a case, what’s the best way to ask a non-technical person for more details? Here are the steps you would normally take:
+
+1. Ask for the browser’s name.
+2. Ask for the browser version, and explain how the user can get it (for example, Click on the settings icon, then on `About`, and copy the number at the bottom).
+3. Ask for a full-page screenshot. If the user does not know how to do that, recommend to them a browser extension that is easy to use.
+
+A great tool for retrieving browser information is [mybrowser.fyi](https://mybrowser.fyi/) by Andy Bell. The great part is that the user can share an auto-generated link of their browser’s information. The following figure shows the visual result:
+
+![image-20250324222310444](/img/image-20250324222310444.png)
+
+Once you have the browser’s name and version and gotten a visual of the issue, you can start to debug. If you don’t have the browser that you need to debug on, then you can either install it on your machine or use an online service, such as BrowserStack.
+
+### Debugging Techniques
+
+When it comes to testing a web page in order to debug CSS, there are a lot of techniques and tools we can use, the most common being these:
+
+- browser’s DevTools;
+- mobile devices;
+- mobile emulators (such as an iOS simulator);
+- virtual machines (such as VirtualBox);
+- online services (such as BrowserStack and CrossBrowserTesting).
+
+## Wrapping Up
+
+In this chapter, we’ve defined what a bug is, gone over the different types of CSS bugs, and summarized the debugging process. In the next chapter, we’ll dig into the browser’s DevTools and learn how to leverage them when fixing CSS issues.
