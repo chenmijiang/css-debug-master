@@ -18,6 +18,9 @@ const meta: MetaRecord = {
   index: {
     title: 'Foreword',
   },
+  overview: {
+    title: 'Overview',
+  },
   contact: {
     title: 'Contact',
     type: 'page',
