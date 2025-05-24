@@ -1,0 +1,145 @@
+# Introduction and Overview
+
+Let's face it: The process of debugging CSS is not straightforward, because there is no direct or clear way to debug a CSS problem. In this book, you will learn how to sharpen your debugging CSS skills.
+
+For traditional programming languages, such as Java, C, and PHP, the techniques of debugging have evolved over the years. This is not the case with CSS. Debugging CSS is not like debugging a programming language because you won't be alerted to errors at compilation time. You would get silent errors, which are not helpful.
+
+Before debugging a CSS error, you need to spot it first. In some cases, you might receive a report from a colleague that there is a bug to be solved. Finding a CSS bug can be hard because there is no direct way to do it. Even for an experienced CSS developer, debugging and finding CSS issues can be hard and confusing.
+
+This chapter will discuss:
+
+- the history of debugging CSS,
+- what has changed today,
+- what debugging CSS means,
+- the debugging mindset,
+- why debugging needs time,
+- an overview of this book's topics.
+
+## The History of Debugging CSS
+
+Because this book is about debugging and finding CSS issues, you should be aware of a bit of the history of how debugging tools for CSS have developed over the years.
+
+### Style Master
+
+You might be surprised to hear that the first CSS debugging tool was released in 1998 — 22 years ago! Its creators, John Allsopp and Maxine Sherrin, named it Style Master. As they described it:
+
+> Style Master is the leading cross-platform CSS development tool. Much more than just a text editor, Style Master supports your workflow — including: creating style sheets based on your HTML; live CSS editing of PHP, ASP.NET, Ruby and other dynamically generated sites; editing CSS via ftp; and much, much more.
+
+![style master](/img/1-1.png)
+
+The goal of Style Master was to make working with CSS more efficient, more productive, and more enjoyable. As you can see, then, debugging CSS has been a topic of interest to developers for a long time.
+
+### Firebug Browser Extension
+
+In 2006, Joe Hewitt released the first version of the [Firebug](https://getfirebug.com/) browser extension.
+
+> Firebug is a discontinued free and open-source web browser extension for Mozilla Firefox that facilitated the live debugging, editing, and monitoring of any website’s CSS, HTML, DOM, XHR, and JavaScript. — [Wikipedia](<https://en.wikipedia.org/wiki/Firebug_(software)>)
+
+![firebug](/img/1-2.png)
+
+The main features of Firebug were very similar to what we have in the developer tools (DevTools) of today’s browsers:
+
+- inspecting HTML and CSS,
+- reviewing the JavaScript console,
+- testing web performance.
+
+Without the effort of the folks who created these great tools, Style Master and Firebug, we might not have the DevTools we use today. We couldn’t be more thankful to them.
+
+## What Has Changed Today?
+
+The scene today is dramatically different. Every browser these days has built-in DevTools that make it easy for a developer to inspect and edit the HTML, CSS, and JavaScript of a web page. In this book, we’re interested in CSS.
+
+Not to mention, when Style Master and Firebug were released so long ago, websites were very simple, and we had only one screen size to test on. Today, a website can be accessed by hundreds of smartwatches, mobile phones, tablets, laptops, and desktop computers. Debugging for all of these types of devices is not an easy task. You could fix something for mobile and break it unintentionally for the desktop.
+
+It’s not only about screen sizes. The size of web projects has gotten much bigger in the last 10 years. For example, the developers of a large-scale front-end project like Facebook or Twitter need a systematic way to test and debug. All of these changes to the work of web development are clear evidence that debugging must be taken care of from day one and that developers must learn it as a core skill.
+
+## What Does Debugging CSS Mean?
+
+> Debugging is the process of finding and resolving bugs (defects or problems that prevent correct operation) within computer programs, software, or systems. — [Wikipedia](https://en.wikipedia.org/wiki/Debugging#Debugging_process)
+
+We can use the same definition. Finding and resolving CSS bugs is an essential skill. Regardless of the programming language you are used to working with, the debugging steps are almost the same for CSS. Later in this chapter, we’ll go over a clear strategy for debugging that you can use right away.
+
+When I refer to a "CSS bug" throughout this book, I mean a bug that was caused by the developer, not a bug implanted by the browser. But we will address both types.
+
+## Why Debugging Should Be Taught
+
+The fast development of browser DevTools makes it hard to catch up with all of the techniques and methods of debugging CSS. Not to mention the lack of an organized resource that is easy for a beginner to follow.
+
+## The Debugging Mindset
+
+According to Devon H. O’Dell, in his paper “[The Debugging Mindset](https://queue.acm.org/detail.cfm?id=3068754)”:
+
+> Software developers spend 35-50 percent of their time validating and debugging software. The cost of debugging, testing, and verification is estimated to account for 50-75 percent of the total budget of software development projects, amounting to more than $100 billion annually.
+
+If you need to fix a bug quickly, you might feel a bit stressed, which could lead you to rush a solution without a clear strategy. That could easily result in confusion and time wasted on things that don’t matter.
+
+Any programming language has logical and illogical errors. Take JavaScript. When there is an error in your JavaScript, you can see by checking the browser’s console. At least you will have evidence that there is an error, with the reason for why it happened.
+
+CSS is completely different. You won’t get any kind of alert when you’ve made an error. That alone can make the simplest CSS bug very hard to fix, if you don’t think clearly and follow a sensible strategy. A CSS bug could be caused either by the developer, as when a CSS property is improperly used, or by inconsistencies between web browsers.
+
+Moreover, you might be the one responsible for testing a website and uncovering the bugs. So, we’re dealing not only with fixing bugs, but also finding them as well.
+
+### Identifying CSS Bugs
+
+Before a customer or someone on your team discovers something broken on the website, you can do some testing and try to **break** the design intentionally. In the fifth chapter, you will learn some methods of intentionally breaking a CSS layout.
+
+### Explaining a Bug to Someone
+
+Have you ever spent hours trying to solve a CSS issue, only to explain it to a friend or colleague and gotten that spark of an idea of how to fix it? That is the effect of explaining a bug to a friend. You got stuck because you didn’t take enough time to think deeply about the problem.
+
+When you find yourself going in circles like that, take a break and come back to it later. Fixing issues needs intense focus. If you’re working on a solution while your mind is exhausted, you might unintentionally break something else. Avoid that with a break.
+
+## Why Debugging Needs Time
+
+In his excellent blog post, "[You’ve Only Added Two Lines — Why Did That Take Two Days!](https://www.mrlacey.com/2020/07/youve-only-added-two-lines-why-did-that.html)", Matt Lacey presents some solid reasons for why debugging takes time. Let’s go through them.
+
+### An Issue Is Not Clear
+
+Don’t expect someone to report an issue in full detail. A vague description is fine. Before asking for more detail, try to understand the issue as fully as possible. Once you’ve done that, you’ll need to reproduce the bug on your machine, and then you’ll have a starting point.
+
+### The Symptoms Are Easier to Treat Than the Cause
+
+When working on an issue, it’s important to investigate the cause of it, not only the symptoms. As Lacey says:
+
+> If some code is throwing an error, you could just wrap it in a try..catch statement and suppress the error. No error, no problem. Right? Sorry, for me, making the problem invisible isn’t the same as fixing it.
+
+Making a bug invisible with a “quick fix” might introduce some unexpected side effects. You have a chance to fix the issue, not to create more problems!
+
+### Focusing on One Path to the Problem
+
+Some issues can be reproduced in multiple ways, not just the reported one. Finding those ways is not only useful to thoroughly solving the issue, but also can provide great insight into how the CSS is written, and whether there are other spots in the code base where the same issue can be expected to crop up. This can be very helpful for fixing bugs before they reach users.
+
+### Ignoring Side Effects
+
+Fixing an issue is one thing; avoiding side effects from fixing it is another. That’s why it’s best to fix an issue with the least amount of CSS possible, and with a thorough understanding of possible side effects.
+
+## Write Code That Is Easy To Debug
+
+Poorly organized code can make debugging much harder. For a large web project, the CSS should be divided into components and partial files, which would then be complied with a CSS preprocessor such as Sass, LESS, or PostCSS.
+
+If you decide to write all of you CSS to a single file, don’t expect debugging to be easy. You will end up scrolling the large file up and down endlessly. This approach is confusing and not ideal. More bugs tend to crop up in a single-file CSS.
+
+In the next chapter, we’ll go through different types of CSS issues, get into details about debugging in the browser, and much more.
+
+## Who Is This Book For?
+
+This book is intended for designers and front-end and back-end developers who are interested in improving their skills in finding and fixing CSS bugs. You should have an intermediate level of knowledge of HTML and CSS.
+
+In some sections, you will need to follow the steps of installing an npm package. Don’t worry, that won’t require extensive Node.js experience. You’ll be able to follow along easily.
+
+## Why I Wrote This Book?
+
+The lack of resources for learning how to find and fix CSS bugs is the primary reason why I wrote this book. As soon as I began researching the topic, I discovered that this topic has been overlooked. There should be a guide that discusses in an easy and straightforward way all of the details related to debugging.
+
+## An Overview of the Book Chapters
+
+Here is an overview of the chapters you’ll find in this book:
+
+- Introduction to CSS bugs
+- Debugging environments and tools: Browser DevTools, virtual machines, mobile browsers
+- CSS properties that commonly lead to bugs
+- Breaking a layout intentionally
+- Browser inconsistencies and implementation bugs
+- General tips and tricks
+
+Now that we’re done with introducing the book, let’s start debugging CSS!

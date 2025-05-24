@@ -1,3 +1,4 @@
+import Logo from '@/components/Logo';
 import { type Metadata } from 'next';
 import { Layout, Navbar } from 'nextra-theme-docs';
 import 'nextra-theme-docs/style.css';
@@ -11,12 +12,13 @@ export const metadata: Metadata = {
     template: '%s | CSS Debug Master',
   },
   description: 'CSS Debug Master documentation',
+  icons: '/favicon.ico',
 };
 
 // const banner = <Banner storageKey="some-key">Nextra 4.0 is released 🎉</Banner>;
 const navbar = (
   <Navbar
-    logo={<b>CSS Debug Master</b>}
+    logo={<Logo className="h-8 md:h-10 relative -left-2" />}
     logoLink="/"
     projectLink="https://github.com/chenmijiang/css-debug-master"
   />
@@ -46,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Layout
           navbar={navbar}
           pageMap={await getPageMap()}
-          docsRepositoryBase="https://github.com/chenmijiang/css-debug-master"
+          docsRepositoryBase="https://github.com/chenmijiang/css-debug-master/tree/main"
           toc={{
             extraContent: CustomFooter,
           }}

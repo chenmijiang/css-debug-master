@@ -1,0 +1,1220 @@
+# Debugging Environments and Tools
+
+Every modern web browser has development tools, or DevTools, built in. In the history section, I explained a bit about the tools Style Master and Firebug. Browser DevTools are based on these projects. To open yours, right-click and select “Inspect element” from the menu. If you’re a keyboard person, here are the shortcuts for each browser:
+
+- Chrome: `⌥ + ⌘ + I` on a Mac, and `Ctrl + Shift + I` on Windows
+- Firefox: `⌥ + ⌘ + C` on a Mac, and `Ctrl + Shift + I` on Windows
+- Safari: `⌥ + ⌘ + I`
+- Edge: `⌥ + ⌘ + I` on a Mac, and `Ctrl + Shift + I` on Windows
+
+I will be using Google Chrome in this book, unless I mention another web browser.
+
+You can inspect any element and toggle its CSS properties. To select an
+element, right-click and choose “Inspect” from the menu.
+
+![image-20250324222459019](/img/image-20250324222459019.png)
+
+When you select “Inspect”, the browser’s DevTools will open at the bottom of the screen. That’s the default position for it. You can pin it to the right or left side of the screen by clicking on the dots icon in the top right.
+
+![image-20250324222523009](/img/image-20250324222523009.png)
+
+With the dots clicked, a little dropdown menu will open. You can choose where to pin the DevTools. There is no right place; choose based on your preference. However, you will need to dock it to the right when you are testing at mobile and tablet sizes. This is how it looks:
+
+![image-20250324222547869](/img/image-20250324222547869.png)
+
+## Toggling a CSS Declaration
+
+We’ve opened the DevTools and know how to access them. Let’s inspect an element and play with its CSS at a basic level. With an element inspected, we can toggle its styles with a checkbox (the checkbox is not visible by default).
+
+With an element inspected, look over at the “Styles” tab. You’ll notice that when you hover over a CSS property, a checkbox appears before the CSS declaration. When this box is unchecked, the style will be disabled and won’t be applied to the element.
+
+![image-20250324222618529](/img/image-20250324222618529.png)
+
+When you toggle a style off, the checkbox will be visible, to give you a visual hint that it is disabled.
+
+![image-20250324222643787](/img/image-20250324222643787.png)
+
+Turning a CSS declaration on and off is similar to commenting CSS. In fact, if you copy a CSS rule with one of its styles toggled off and paste it somewhere, the editor will disable the style by commenting it out with `/* */`. Here is how the CSS will look when copied:
+
+```css
+.menu {
+  /* display: block; */
+}
+```
+
+## Using the Keyboard to Increment and Decrement Values
+
+In the “Elements” panel, you can select a CSS declaration that has a number, and increment or decrement the value by using the up and down arrow keys. You can also type a value manually.
+
+![image-20250324222800069](/img/image-20250324222800069.png)
+
+You can also hold the `Shift`, `Command`, or `Alt` keys with the up and down arrow keys to change numbers with set intervals:
+
+- `Shift + up/down`: ±10
+- `Command + up/down`: ±100
+- `Alt + up/down`: ±0.1
+
+This is faster than changing one number at a time with the up and down arrows.
+
+When you change a value and want to exit editing mode, you can do one of the following:
+
+- Click on white space next to the CSS declaration.
+- Press the `Escape` key.
+- Press the `Enter` key (although this will move to the next declaration in the CSS rule).
+
+## CSS Errors
+
+Given the nature of CSS, debugging is harder when a typo is made or an incorrect value is used for a property. You won’t know that a property has a mistyped name until you inspect the element that is showing the bug. The way CSS works is that the browser will parse all declarations and ignore the invalid ones. Compare this to JavaScript, in which an error will break the whole script, and opening the browser’s console will make it obvious that something is wrong.
+
+Luckily, Firefox has a great feature that shows a warning when you use a CSS property that has no effect. At the time of writing, this feature is available only in Firefox.
+
+![image-20250324222830308](/img/image-20250324222830308.png)
+
+Hopefully, more browsers will follow!
+
+## DevTools Mobile Mode
+
+With the browser’s DevTools, you can test different viewport sizes of the website you’re working on. In this section, we will look at mobile testing topics related to modern browsers (Chrome, Firefox, Safari, Edge).
+
+Suppose you get a message from a client or colleague saying, “Hey, the font size on page X is too small to read on mobile. Can we do something about it?”
+
+From their message, we can determine that:
+
+- the font size is too small to read,
+- we need to test in a mobile viewport.
+
+The first thing we’ll need to do is fire up the DevTools in the browser, and switch to the device toolbar (in Chrome). You can access the device toolbar by clicking on the mobile icon in the top-left corner of the DevTools or by using the keyboard shortcut (`Command + Shift + M`). From there, we can start testing different sizes and, eventually, find the source of the issue.
+
+![image-20250324222857995](/img/image-20250324222857995.png)
+
+Other browsers, such as Firefox and Safari, have a device mode but call it “responsive design mode”. Here is how to access it:
+
+- Firefox: Tools > Web Developer > Responsive Design Mode
+- Safari: Develop > Enter Responsive Design Mode
+
+Let’s go over some things to keep in mind while testing.
+
+## Mobile Mode Doesn’t Show a Horizontal Scrollbar
+
+If an element has a width bigger than the viewport, then horizontal scrolling will take effect. Try to scroll randomly to the left or right. This can reveal any unwanted scrolling issues. Note: this book has a whole chapter on how to break a layout.
+
+## Scroll Into View
+
+While testing a website in mobile mode, the page will usually be very long, and it wouldn’t be practical to have to keep scrolling to reach the element you want to inspect. Luckily, Chrome has a feature named “Scroll Into View”, which scrolls the page to the section you’ve selected.
+
+![image-20250324222922966](/img/image-20250324222922966.png)
+
+## Screenshotting Design Elements
+
+There will be times when you need to take a screenshot of a page. The tools available online are not all great. Chrome and Firefox have a feature to take screenshots. I particularly like Firefox’s feature, named “Screenshot Node”, which simply takes a screenshot of the selected HTML element. It’s very helpful and a time-saver.
+
+For Chromium-based browsers (Chrome and Edge), the process is:
+
+1. select the element;
+2. hit `Shift + Command + P` (make sure no browser extension uses this command);
+3. Type “capture node screenshot” and hit “Enter”
+
+At the time of writing, Chrome Canary 86 supports “capture node screenshot” in the inspector. It will be soon available officially in Chrome.
+
+To take a screenshot in Firefox:
+
+1. open Firefox’s DevTools,
+2. right-click on an element,
+3. select “Screenshot Node”.
+
+## Device Pixel Ratio
+
+The device pixel ratio (DPR) is the ratio between physical pixels and logical pixels. For example, the iPhone 5 reports a DPR of 2, because the physical resolution is double the logical resolution.
+
+- Physical resolution: 960 × 640
+- Logical resolution: 480 × 320
+
+In mobile mode in Chrome’s DevTools, you will find a dropdown menu for the DPR. There are two basic types of screens: standard and “retina”. A 1x image will look OK on a standard screen but will look pixelated on a retina screen. The DPR has three ratios: 1x, 2x, and 3x. Chrome names it as “device pixel ratio”, while Firefox and Safari list the ratios mentioned. The benefit here is that we can test images and simulate how they look at different resolutions.
+
+As [Google Developers states](https://developer.chrome.com/docs/devtools/device-mode/):
+
+> To simulate this effect on a standard display, set the DPR to 2 and scale the viewport by zooming. A 2x asset will continue to look sharp, while a 1x one will look pixelated.
+
+If you have a standard screen and a `1x` image looks good to you, it’s possible to simulate how it would look on a `2x` screen by setting the DPR to `2` or by choosing `2x` as an option and then zooming in once.
+
+![image-20250324222957579](/img/image-20250324222957579.png)
+
+In general, use SVG wherever possible. This can’t always be done, so if you use images, provide different resolutions for them. For example, you can use the HTML `<picture>` element to load different resolutions and sizes of the same image. The browser will then serve a resolution suitable to the screen’s size.
+
+## Switching the User Agent
+
+According to Mozilla Developer Network (MDN):
+
+> The User-Agent request header is a characteristic string that lets servers and network peers identify the application, operating system, vendor, and/or version of the requesting user agent.
+
+The user agent enables the server to identify the browser that the visitor is using. Each browser has its own user agent.
+
+Each browser also allows you to test different user agents. If you’re on Windows and using Chrome, you can switch the browser to “Safari on macOS”. The web server will identify the user agent you’re browsing with.
+
+To debug and check the user agent of your current browser, open the DevTools’ console and type the following:
+
+```js
+console.log(navigator);
+```
+
+I’m using Chrome on macOS. The log shows this string:
+
+> Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36
+
+Why debug this at all? Well, there are some important use cases. Consider this figure:
+
+![image-20250324223030006](/img/image-20250324223030006.png)
+
+We have a download button for an application, which should change according to the user’s operating system.
+
+Another use case is a browser extension that is available in both Chrome and Firefox browsers:
+
+![image-20250324223049392](/img/image-20250324223049392.png)
+
+The process of changing the user agent will depend on the browser you’re using:
+
+- Chrome: Network Conditions > Uncheck “Select Automatically” > select the user agent
+- Safari: Develop > User Agent
+- Firefox: I’ve found it’s a bit complex, so I recommend using an extension instead.
+
+## Debugging Media Queries
+
+Media queries are the foundation of responsive web design. Without them, the web wouldn’t look as it does today. To debug media queries, we need the power of the DevTools.
+
+First, inspect the CSS you’re debugging (in case you didn’t write it). Does the code use `min-width` media queries more than `max-width`? Do you see any `max-width` media queries at all? This matters because of mobile-first design, which you’ve probably heard of. It entails writing CSS for small screens first, and then enhancing the experience for bigger screens such as tablets and desktop devices.
+
+![image-20250324223115465](/img/image-20250324223115465.png)
+
+Here, we have a navigation toggle, shown by default on small screens. When the viewport is large enough to display the navigation items, the toggle disappears.
+
+```css
+.nav__toggle {
+  /* Shown by default */
+}
+
+.nav__menu {
+  /* Hidden for mobile */
+  visibility: hidden;
+  opacity: 0;
+}
+
+@media (min-width: 900px) {
+  .nav__toggle {
+    display: none;
+  }
+
+  .nav__menu {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+```
+
+However, if this wasn’t built mobile-first, then the menu toggle would be hidden by default and shown via a `max-width` media query:
+
+```css
+.nav__toggle {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .nav__toggle {
+    display: block;
+  }
+
+  .nav__menu {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+```
+
+When debugging a project, you need to get your hands dirty with such details to know what you’re dealing with. This will help you to fix issues more quickly and reduce unwanted side effects.
+
+To view a media query in Chrome’s DevTools, you need to select the element that is being affected by it:
+
+![image-20250324223202989](/img/image-20250324223202989.png)
+
+Notice that when we select an element, we see the media query for it. The handy thing is that we can edit the media query and test right in the DevTools. The figure above shows a normal case, without any issue. Let’s explore the most common bugs related to media queries.
+
+### Don’t Forget the Meta Viewport Tag
+
+The `viewport` meta tag tells the browsers, “Hey, please take into consideration that this website should be responsive?” Add the following to the HTML’s head element:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+```
+
+### The Order of Media Queries Matters
+
+Consistent ordering of media queries is important.
+
+```css
+@media (min-width: 500px) {
+  .nav__toggle {
+    display: none;
+  }
+}
+
+.nav__toggle {
+  display: block;
+}
+```
+
+Can you guess whether the `.nav__toggle` element will be visible in viewports wider than 500 pixels? The answer is yes, because the second declaration of `.nav__toggle` overrides the one in the media query.
+
+![image-20250324223256681](/img/image-20250324223256681.png)
+
+The DevTools will show something similar to the figure above. The style in the media query would be struck through, meaning it’s been canceled or overridden. The solution, then, is to order them correctly:
+
+```css
+.nav__toggle {
+  display: block;
+}
+
+@media (min-width: 500px) {
+  .nav__toggle {
+    display: none;
+  }
+}
+```
+
+## What If a Media Query Doesn’t Work?
+
+When someone is reporting a bug, saying that a media query is not working is not enough. However, we can check whether a media query is working with a simple test. Suppose we have this:
+
+```css
+@media (min-width: 500px) {
+  .element {
+    background: #000;
+  }
+}
+```
+
+To test the media query, we can add a background color to the `body`:
+
+```css
+@media (min-width: 500px) {
+  body {
+    background: red;
+  }
+}
+```
+
+Still not working? Then check whether:
+
+- the cached CSS is cleared,
+- the CSS file is linked to correctly,
+- the media query doesn’t have a typo and is not missing the closing brace.
+
+### Avoid Double-Breakpoint Media Queries
+
+A common mistake is to use the same value in two media queries, one with a `min-width` and the other with a `max-width`. This typically happens with mobile navigation.
+
+```css
+@media (max-width: 500px) {
+  .nav {
+    display: none;
+  }
+}
+@media (min-width: 500px) {
+  .nav__toggle {
+    display: none;
+  }
+}
+```
+
+At a glance, these media queries might look good to you. However, 99% of the time, you’ll forget to test an important breakpoint: `500px`, that 1-pixel gap between the two breakpoints. At this breakpoint, neither the navigation nor the toggle would be visible.
+
+![image-20250324223351992](/img/image-20250324223351992.png)
+
+This 1 pixel is hard to debug without manually entering a value for a 500px media query in mobile mode. To prevent this issue, avoid using the same value in two media queries.
+
+```css
+@media (max-width: 499px) {
+  .nav {
+    display: none;
+  }
+}
+
+@media (min-width: 500px) {
+  .nav__toggle {
+    display: none;
+  }
+}
+```
+
+### List Media Queries
+
+In Chrome, you can view a page according to the media queries defined in the CSS, rather than according to the list of devices available in the browser.
+
+![image-20250324223410895](/img/image-20250324223410895.png)
+
+As you can see, we have two bars, the blue bar for min-width queries, and the orange for max-width queries. Having a broader view of all media queries is useful for testing multiple query sizes. Conveniently, we can reveal a media query in the source code. Right-click on a media query, select “Reveal in source code”, and you’ll be taken to the line of code for that media query.
+
+![image-20250324223424172](/img/image-20250324223424172.png)
+
+### Vertical Media Queries Are Important
+
+A common mistake with responsive web design is to test only by resizing the browser’s width or by viewing multiple mobile sizes. However, decreasing and increasing the height of the viewport are equally important.
+
+Just as we have media queries tailored to the width of the viewport, the same thing applies to height as well. Consider the following example:
+
+![image-20250324223445451](/img/image-20250324223445451.png)
+
+After reducing the viewport’s height, we find that the fixed header is taking up a lot of the screen’s vertical space. Notice how small the area available for the content is. Users will be annoyed and won’t be able to easily use the website. A simple solution would be to fix the header only when there is enough vertical space.
+
+```css
+/* If the height is 800 pixel or more, the header should be fixed. */
+@media (min-height: 800px) {
+  .header {
+    position: fixed;
+    /* Other styles */
+  }
+}
+```
+
+### Don’t Depend on Browser Resizing Alone
+
+Resizing the browser to test responsiveness is not enough. For instance, Chrome’s window narrows to a width of 500 pixels. This is not enough. You’ll need to test below that (320 pixels, at least). Instead, test the website in the DevTools’ device mode.
+
+## Box Model
+
+If we remember anything about the box model, it should be that every element on a web page is a rectangular box containing one or more of the following: position, margin, border, padding, and content.
+
+If padding and a border are applied to an element, they will be added to its content box, unless the `box-sizing` property for that element is set to `border-box`. Make this change to avoid any issues.
+
+```css
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+```
+
+![image-20250324223540202](/img/image-20250324223540202.png)
+
+I inspected a website’s logo to see its box model. Notice that you need to open the “Computed” tab to see the box model. All boxes are labeled, except the one for width and height. When debugging an element, looking at the box model is extremely useful because it will show you all of the inner and outer spacings of an element.
+
+Sometimes, we might build a web page without a CSS reset file, and we’ll wonder why some elements have certain spacing. Looking at the box model is the best way to get an idea of what’s happening.
+
+### Everything in CSS Is a Box
+
+Every single element on a web page is a square or a rectangle. Even if an element appears as a circle or has rounded edges, it is still a rectangular box. When debugging, keep that in mind.
+
+![image-20250324223606123](/img/image-20250324223606123.png)
+
+The simplest way to see this for yourself is by going to your favorite website and applying the `outline` property to everything:
+
+```css
+*,
+*::before,
+*::after {
+  outline: solid 1px;
+}
+```
+
+We’ve tagged every element on the page, including pseudo-elements ( `:before` and `:after` ). This way, we can see that the page is essentially some rectangles painted here and there.
+
+## Computed CSS Values
+
+In CSS, everything computes to a pixel value, regardless of whether you’re using `rem` , `em` , `%` , or viewport units. Even the unit-less `line-height` property computes to a pixel value. In some cases, it’s important to see the computed value of an element.
+
+```css
+.element {
+  width: 50%;
+}
+```
+
+The width of `.element` is `50%` , but how do we see its computed value? Well, thanks to the DevTools, we can do that. Let’s dig into the “Computed” tab.
+
+![image-20250324223706925](/img/image-20250324223706925.png)
+
+You’ll see that numbers have been assigned to various parts, to make it easier to explain this area of the DevTools.
+
+1. This is the property’s name. Usually, it’s colored differently from the value.
+
+2. This is the value of the CSS property.
+
+3. We can expand a property to see its inherited styles. This element has `font-size: 1.125rem` , and it inherits a `1em` font size from the `html` element.
+
+4. This is the pre-computed value, along with the element that the value is attached to.
+
+5. This is the name of the CSS file, and the line number of the CSS rule.
+
+6. When hovering over the value of a property, an arrow will appear. Clicking on it will take you to the source CSS file and the line number.
+
+7. This filter helps with searching for a property. Note that you can only search by a property’s longhand name. For example, searching for `grid-gap` won’t show anything, whereas searching for `grid-column-gap` would return a result.
+
+8. By default, not all CSS properties are shown in the “Computed” tab. You will need to check this box to see them all.
+
+## Grayed-Out Properties
+
+![image-20250324223747376](/img/image-20250324223747376.png)
+
+You will notice that elements without an explicit height set might have a grayed-out `height` property.
+
+```css
+.nav__item a {
+  padding: 1rem 2rem;
+}
+```
+
+The `<a>` element doesn’t have a height set, but in reality, its height is the sum of the content and padding, which is an alternative to an explicit height.
+
+This doesn’t happen only for padding. The example below has two elements, one of which is empty.
+
+```html
+<div class="wrapper">
+  <div class="element">content</div>
+  <div class="element"></div>
+</div>
+```
+
+```css
+.wrapper {
+  display: flex;
+}
+
+.element {
+  width: 100px;
+  padding: 1rem;
+}
+```
+
+Flexbox stretches child items by default. As a result, the height of the items will be equal, even the empty one. If you inspect that element and check the computed value of its `height` property, you will notice that it’s grayed out.
+
+Tip: A property that is grayed out means that its value hasn’t been set explicitly. Rather, it’s being affected by other things, such as the element’s content or padding or by being a flexbox child.
+
+## Firefox’s Style Editor
+
+![image-20250324223814545](/img/image-20250324223814545.png)
+
+The style editor in Mozilla’s Firefox browser is a kind of a design app in the browser. Here are some of the great things you can do with it:
+
+1. Create new style sheets and append them to the document.
+
+2. Import a CSS file.
+
+3. List all of the CSS files for a document, with the ability to activate and deactivate them by clicking an eye icon (similar to showing and hiding layers in a design app).
+
+4. Save a file from the list.
+
+5. List all media queries in the selected CSS file. The active one will be highlighted in a dark color, and the inactive ones will be dimmed. You can jump to the part of the code that has the media query.
+
+6. Click a media query.
+
+What I particularly like about this is that you can hide all of the CSS files, which is the equivalent of disabling CSS.
+
+Also, being able to import a CSS file into a page is useful, opening up a lot of possibilities. Imagine that you’re working on a layout for a web page and want to change a few things here and there but without losing your work. You can import a new CSS file, copy the current CSS to it, and then edit it as much as you want. When you’re done, you can switch between the old and new CSS to see the completely different layouts.
+
+## CSS Properties That Don’t Have an Effect
+
+Some CSS properties have dependencies. Take the following:
+
+```css
+.element {
+  z-index: 1;
+}
+```
+
+If you haven’t changed the `position` of the element to anything other than `static` , then it won’t affect the element at all. It’s not easy to spot these issues while debugging because they don’t break the layout. They are silent.
+
+Firefox has a very useful feature for this, showing a warning when a CSS property doesn’t affect the element it’s being applied to.
+
+![image-20250324223957310](/img/image-20250324223957310.png)
+
+This is very helpful and, at the time of writing, available only in Firefox.
+
+## Compatibility Support in Firefox
+
+While inspecting an element’s CSS, you can see the browsers that support a particular feature, along with the browser versions. You can view details by hovering over one of them. I like this feature a lot because it gives you hints on which browsers to test more carefully.
+
+![image-20250324224020758](/img/image-20250324224020758.png)
+
+## Getting the Computed Value While Resizing the Browser
+
+It’s not enough to look at the computed value of an element. What’s more useful is to filter a specific property that you need to check, and then resize the responsive view wrapper to see the value change.
+
+```css
+.title {
+  font-size: calc(14px + 2vw);
+}
+```
+
+Here, we have a title with a base `14px` font size plus `2vw` (2% of the viewport’s width). Here is an explainer:
+
+![image-20250324224046855](/img/image-20250324224046855.png)
+
+I searched for `font-size` and then started to resize the view on the left. This is a very helpful way to keep yourself aligned with what’s happening in the background.
+
+## Getting the Computed Value With JavaScript
+
+By using JavaScript’s `getComputedStyle` method, it’s possible to get the value of a specific property. Consider the following example:
+
+```css
+.element {
+  font-size: 1.5rem;
+}
+```
+
+We’ve set the font size using the `rem` unit. To get the computed pixel value, we would do this.
+
+```js
+let elem = document.querySelector('.element'); /* [1] */
+const style = getComputedStyle(elem); /* [2] */
+const fontSize = style.fontSize; /* [3] */
+```
+
+Here is what the code is doing:
+
+1. It selects the element.
+2. It stores the element’s style in the `style` variable.
+3. Now that the `style` variable is an object, holding all of the element’s style, we can get the computed value of the property.
+
+Cool! What if the property we want to check has a viewport- or percentage-based value (for example, `font-size: calc(14px + 2vw)` )? The value of that font size would change with every viewport resize.
+
+```js
+let elem = document.querySelector('h1');
+window.addEventListener('resize', checkOnResize);
+function checkOnResize() {
+  const style = getComputedStyle(elem);
+  console.log(style.fontSize);
+}
+checkOnResize();
+```
+
+As you can see, this is the same concept, but with a `resize` event used this time. This can be very useful for tracking things, and you can even render the value on the page itself:
+
+![image-20250324224129520](/img/image-20250324224129520.png)
+
+## Reordering HTML Elements
+
+In Chrome’s DevTools, you can click and drag an element to reorder it. This can be useful for changing the structure of an entire page or component. Once it’s reordered, we can start testing various things, such as:
+
+- the flexbox `order` property,
+- the adjacent-sibling combinator ( `.item + .item` ),
+- an element with `margin-bottom` or `margin-top`.
+
+Let’s dig in more and learn how reordering works.
+
+1. Open up the DevTools.
+2. Select the element you want to reorder.
+3. Click and drag the element wherever you want.
+
+This is how you would drag a section element along with its sibling:
+
+![image-20250324224157223](/img/image-20250324224157223.png)
+
+We can also reorder child items. Suppose each section has a title and description. We can reorder them inside their parent.
+
+![image-20250324224216426](/img/image-20250324224216426.png)
+
+A child element can be dragged in multiple ways:
+
+- inside its parent (this will just reorder it at the same level),
+- between other parent elements,
+- inside another parent element.
+
+![image-20250324224303804](/img/image-20250324224303804.png)
+
+## Editing Elements in the DevTools
+
+There are multiple ways to edit an HTML element in the DevTools. They’re very useful in cases where you want to add a class or attribute or maybe delete the whole element. Here are the ways to do it:
+
+- add or delete a CSS class,
+- change the element type (for example, `<div>` to `<h2>` ),
+- add or remove an attribute,
+- delete the element.
+
+### CSS Classes
+
+To add, edit, or remove a CSS class, you could double-click the class name of the element, and it will become editable. But this is the less recommended way to do it. The better way is to select the element, and then click the `.cls` label with the DevTools opened. Being clicked, it will show all of the classes associated with the selected element, and we can add or remove them by checking and unchecking the boxes.
+
+![image-20250324224325917](/img/image-20250324224325917.png)
+
+### Utility-Based CSS Websites
+
+If the website you’re working on was built with utility-based CSS, debugging its CSS in the browser would be different than debugging a website with regular class names.
+
+Here is an element with a class name:
+
+```html
+<div class="card"></div>
+```
+
+And here is the same element with utility-based CSS:
+
+```html
+<div class="d-flex flex-column p-2 b-2 rounded hidden"></div>
+```
+
+When the whole website is built with utility classes, debugging will be a little different. Let’s say we want to inspect an element and remove `display: flex` by unchecking the box in the DevTools. If we do this, any element that uses the `d-flex` class will break. The reason, of course, is that we’ve removed the `display` property from all of those other elements.
+
+Using the `.cls` option would be better because it will list all of the CSS classes for that element.
+
+![image-20250324224411463](/img/image-20250324224411463.png)
+
+Another option would be to add inline CSS styles, which would override the ones added in the CSS files. Or you could double-click on the element’s class attribute and manually remove the class that you don’t want.
+
+### Changing an Element’s Type
+
+Say you have a `div` element but want to change its type without leaving the DevTools. Well, this is possible. To change it, double-click the element type and then edit the opening tag.
+
+Note: there is no needed to edit the closing tag. The DevTools will do that automatically.
+
+![image-20250324224434241](/img/image-20250324224434241.png)
+
+### Adding or Removing an Attribute
+
+When you need to add an attribute, select the element, right-click, and select “Add Attribute”. It’s that easy. Note that you can also add it by double-clicking on the element itself.
+
+![image-20250324224451606](/img/image-20250324224451606.png)
+
+### Deleting an Element
+
+To delete an element, hit the `Function + Backspace` keys. This will work in all browsers and on all platforms. If you are using Chrome, hit the `Backspace` key only. The mouse is an alternative: Right-click the selected element, and choose “Delete” from the list.
+
+![image-20250324224507438](/img/image-20250324224507438.png)
+
+### Keyboard Goodness
+
+Some keyboard shortcuts are very useful and increase productivity:
+
+- Navigate between elements with the up and down arrow keys.
+- Hit the right arrow key to expand an element and the left arrow key to collapse it.
+- When an element is selected, hit `Enter` to edit the CSS class name.
+
+## The `H` Key
+
+The fastest way to hide an element in the DevTools is by hitting the H key, which will add `visibility: hidden` to the element. The space taken up by the element will be preserved.
+
+What’s the benefit of hiding an element in this way? Here are a couple of uses:
+
+- If you have a child of an element that doesn’t appear as expected, we can use `H` to investigate it.
+- If you need to screenshot an element or section, and you don’t want all of its details to be in the image, simply use `H` to hide the unwanted elements.
+
+## Forcing an Element’s State
+
+In CSS, an element can take one of four states (pseudo-classes): `:visited`, `:focus`, `:hover`, `:active`. Luckily, we can debug all of them using the DevTools.
+
+Before digging into how to debug them, let’s review the pseudo-classes.
+
+- `:visited` is the state when a link is clicked. When a user revisits a web page, that link should have a different state, so that the user can tell they’ve visited it.
+- `:focus` is the state that shows up when the user navigates the page by keyboard. A button or link should take a style that clearly indicates it is in focus.
+- `:hover` is the state when an element is hovered over by the mouse.
+- `:active` is the state when an element is being pressed from a click by the mouse.
+
+In CSS, the order of pseudo-classes matters. It should be as follows:
+
+```css
+a:visited {
+  color: pink;
+}
+
+a:focus {
+  outline: solid 1px dotted;
+}
+
+a:hover {
+  background: grey;
+}
+
+a:active {
+  background: darkgrey;
+}
+```
+
+If this order is not followed, some styles will get overridden. Order the styles correctly to avoid issues.
+
+Let’s get to the interesting part. How do we debug these pseudo-classes in the DevTools? Well, there are two ways.
+
+### Select an Element
+
+Right-click an element or click on the dots icon on the left, and then choose “Force State” . From the options list, choose the state you want to activate. See the figure below:
+
+![image-20250324224555968](/img/image-20250324224555968.png)
+
+Checking the box adds a blue dot to the element on the left side. This visual indicator shows that the element has a forced state.
+
+### Use the Panel
+
+Another way to force an element’s state is by using the DevTools panel. Clicking on `:hov` will expand a list with all pseudo-classes. Each one has a checkbox, which makes it easy to activate or deactivate a state while testing.
+
+![image-20250324224613110](/img/image-20250324224613110.png)
+
+### Toggle the State of an Element
+
+We can also add a pseudo-class manually:
+
+1. Select an element.
+2. Click on the `+` button in the panel.
+3. A new rule will be added in the styles panel. All you need to do now is edit it and add the pseudo-class you want.
+
+![image-20250324224628468](/img/image-20250324224628468.png)
+
+## Debug an Element Shown Via JavaScript
+
+In some cases, hovering over an element will add a child to the DOM. Debugging these elements is tricky. They will be hidden in the inspector because you are not actively hovering over them.
+
+The question is how to debug a hidden element? Well, there are a couple of ways.
+
+### Is the Element in the HTML?
+
+In this case, the element we want to debug is already in the HTML but hidden via CSS and only shown once its parent is hovered over. To debug this, the first thing we need to do is inspect the parent element. What’s the parent, you ask? This should clarify:
+
+![image-20250324224649740](/img/image-20250324224649740.png)
+
+In this example, we have a dropdown menu that is toggled on hover via JavaScript. To debug the dropdown itself, we would inspect the “Products” menu item, and the dropdown element should be inside it. From there, we can add `display: block` to the element and start the debugging process.
+
+### Is the Element Added to the HTML on Hover?
+
+This is more challenging. In this case, an element is added to the HTML only when its parent is hovered over, and it’s removed completely from the HTML when the user stops hovering. We’ll need help from the DevTools for this. To debug, we need to freeze the website once the thing we want to debug has become visible. The best way to do that is to pause the JavaScript’s execution.
+
+When JavaScript execution is paused, it’s possible to follow the code that toggles the menu. This way, we can catch the element once it appears, and inspect it from there.
+
+One important clue that indicates an element is being added to the DOM on hover is that its parent element flashes red. The flashing means that this DOM element is being edited through the addition or removal of a child item or maybe the modification of attributes.
+
+![image-20250324224713358](/img/image-20250324224713358.png)
+
+How do we pause JavaScript execution? Easy:
+
+1. Go to the “Sources” panel.
+2. Expand “Event Listener Breakpoints” .
+3. Add an event listener to “Keyboard” .
+
+Now, hover over the element that you want to debug. Once you do, press any key on the keyboard, and you will notice that the application freezes, and the thing you want to inspect won’t disappear. Feel free to dig in and inspect!
+
+![image-20250324224728393](/img/image-20250324224728393.png)
+
+## Break JavaScript
+
+In Chrome and Firefox’s DevTools, you can break the execution of JavaScript with any of the following:
+
+- subtree modification,
+- attribute modification,
+- node removal.
+
+![image-20250324224747629](/img/image-20250324224747629.png)
+
+Let’s get into each one.
+
+### Subtree Modification
+
+This targets child items of the selected parent. If any addition or deletion of an HTML element happens, this is considered a modification. In this case, the browser will add a breakpoint.
+
+### Attribute Modification
+
+This watches for any modifications to the attributes of the selected element, such as class names and HTML attributes. For example, a change to a class or style attribute would cause the browser to add a breakpoint, and a menu would then be shown via JavaScript.
+
+### Node Removal
+
+This is fairly obvious. Once an element is removed from the HTML, the JavaScript execution would be paused.
+
+JavaScript execution would be paused.
+
+## Using the Debugger Keyword
+
+Sometimes, a CSS bug will appear while a certain JavaScript function is running. For example, you might need to debug the mobile menu once it’s toggled. In this case, the `debugger` keyword can be useful.
+
+In the JavaScript for the toggle button, you would add the following:
+
+```javascript
+function showNav() {
+  debugger;
+  // Add a breakpoint once this function is called.
+}
+```
+
+Once this function is called, the browser will add a breakpoint. Then, you can start debugging.
+
+Note that if the browser doesn’t support the `debugger` keyword, this won’t have an effect.
+
+## Formatting the Source Code to Be Easier to Read
+
+When you inspect an element and want to check its CSS file from the DevTools, you might find that the file has been minified. This makes it hard to read. Luckily, we have the little “Format Code” feature, which quickly formats the minified code.
+
+![image-20250324224820087](/img/image-20250324224820087.png)
+
+Notice the opening and closing braces icon. One click on it and all of the code will be formatted and easy to read.
+
+## Copying an Element’s HTML Along With Its CSS
+
+The only browser that allows you to copy the CSS styles of an element is Chrome, even though it isn’t perfect. The latest version at the time of writing, Chrome 81, has that feature. Here is how to do it:
+
+1. Right-click on a element.
+2. Select “Copy”.
+3. Then, select “Copy styles”. That’s it!
+
+![image-20250324224837898](/img/image-20250324224837898.png)
+
+In the figure above, notice the difference between the original CSS and the one copied from the browser’s DevTools. The copied one has inherited styles such as `box-sizing` and `font-family`. Also, weirdly, it copied all of the CSS properties in the document!
+
+## Rendered Fonts
+
+Rendered fonts are the ones currently being used for a web page. To debug them, inspect any text element, such as a heading or paragraph. At the bottom of the “Computed” tab, there will be a section named “Rendered Fonts”. Here, you can check the font applied to the element.
+
+![image-20250324224902672](/img/image-20250324224902672.png)
+
+Also, as mentioned in the “Computed” section, you can search for `font-family` and see the computed value of it. In addition, you can expand the arrow next to it and see the CSS responsible for the addition of the font.
+
+## Checking for Unused CSS
+
+One useful feature in Chrome’s DevTools enables you to check for unused CSS. It’s called “Coverage”. Here is how to use it:
+
+1. Open up the DevTools.
+2. Click on the dots icon, and select “More”.
+3. Open the “Coverage” panel and hit the reload icon.
+
+Once it’s reloaded, you will see something like the following:
+
+![image-20250324224925702](/img/image-20250324224925702.png)
+
+The code blocks highlighted in red are the ones that are not used on the page, while the ones in blue are being used. Also, it shows you the percentage of the used CSS. That feature is extremely useful for refactoring CSS and checking whether you have unused styles.
+
+## Color-Switching With the DevTools
+
+Chrome’s DevTools provide three types of color systems: hex, RGBa, HSLa. When you pick a color for an element, it’s usually added as a hex color. What if you want the RGBa value of that color without having to use a converter tool? Well, that feature is available in the color inspector.
+
+![image-20250324224941531](/img/image-20250324224941531.png)
+
+If you want a particular blue, and the design requires you to use it with `50%` opacity, add the color as a hex value to the element and, with the color inspector still open, click on the double-arrow icon on the right. This will switch between hex, RGBa, and HSLa, very handy for quickly converting a color from one type to another.
+
+## Copying CSS From the DevTools to the Source Code
+
+When you edit the CSS of an element, you’ll probably want to copy and paste it back in your code editor, instead of having to write it again. There are more than one way to do this.
+
+### Copy Directly From the Inline Inspector
+
+In the following figure, I’ve added some inline styles to an element. Notice how they’re added to the `element.style` selector in the DevTools. This feature is the same for Chrome, Firefox, and Safari.
+
+![image-20250324225003788](/img/image-20250324225003788.png)
+
+Now that we’ve added these inline styles, it’s possible to copy and paste them into our code editor.
+
+### Use the `changes` Feature in Firefox Browser
+
+Firefox has a useful feature named “Changes” that shows the changes we’ve made in the DevTools. It’s not unlike how version control shows the difference between two changes. Here is how to use it:
+
+1. Inspect the element you want to edit.
+2. Edit the styles.
+3. Go to the “Changes” tab, and you will see the edits you’ve made.
+
+![image-20250324225031469](/img/image-20250324225031469.png)
+
+## Debugging Source-Map Files
+
+When using a preprocessor such as Sass, the rendered CSS file might contain instructions for a linked source-map file. When you inspect an element’s CSS in the DevTools, you will notice that the CSS is in a file with the extension `.scss`. This can be confusing.
+
+To remove that `.scss` file from the DevTools, you will have to turn off the source-map feature; or you can open the “Sources” panel in the browser and select the CSS file. Then, you will find something like this:
+
+```css
+/*# sourceMappingURL=index.css.map */
+```
+
+This is an instruction that makes the browser load the Sass file. Removing it will hide the source-map file completely.
+
+## Debugging Accessibility Issues Caused by CSS
+
+Even though most accessibility issues are caused by misused HTML, CSS plays a role in accessibility, too. In this section, you will learn some things to keep in mind when debugging CSS.
+
+### Give the Text Sufficient Color Contrast
+
+A color that is too faint to read will be a problem for users. According to the Web Content Accessibility Guidelines (WCAG) 2.0, the foreground and background colors should have a 4.5:1 contrast ratio at Level AA and a 7:1 contrast ratio at Level AAA.
+
+To achieve this, use colors that are well tested. Great tools are out there to make our job easier. To check whether a text color is accessible, inspect the element, and click on the little color square. You will see a contrast number.
+
+![image-20250324225104444](/img/image-20250324225104444.png)
+
+### Think Twice Before Hiding With display: none
+
+Using `display: none` incorrectly is a hindrance to accessibility. It can easily upset an experience. Suppose you have a search input and button, and the design calls for the `label` element to be hidden.
+
+```html
+<label class="visually-hidden" for="search">Search</label>
+<input type="search" id="search" />
+<button>Show results</button>
+```
+
+![image-20250324225132479](/img/image-20250324225132479.png)
+
+The `label` should be hidden visually but not with `display: none`. Why?
+
+1. You wouldn’t be able to tie the `label` to the `input` using the `for` attribute.
+2. A screen reader wouldn’t be able to read the input’s label. If you’re lucky, it might read the placeholder, if one has been added.
+
+The correct way is to add a class of `visually-hidden` to the label. This will only hide it visually and, as a result, won’t be an accessibility issue.
+
+This snippet comes [from the Accessibility Project](https://www.a11yproject.com/posts/how-to-hide-content/):
+
+```css
+.visually-hidden {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px 1px 1px 1px); /* IE6, IE7 */
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap; /* added line */
+}
+```
+
+### Use the Accessibility Tree
+
+The accessibility panel in the DevTools is a beautiful one. It give us clues on how an element will be exposed to screen readers. For instance, if we select an `input` field and check the accessibility tree, it will show us the label (if available) and the placeholder.
+
+Fixing small issues related to this can have a huge impact, and you don’t need to be an accessibility expert to do it. Here is a realistic example:
+
+```html
+<label class="visually-hidden" for="email">Email address</label>
+<input type="search" placeholder="Email address" id="email" />
+```
+
+We have an email `input`, without a `label` associated with it. If we inspect the `input` and go to the accessibility panel, we will see something like this:
+
+![image-20250324225207380](/img/image-20250324225207380.png)
+
+Notice that it says “textbox: Email address”, and it reads what’s inside the `input`’s placeholder. Without it, the field would be empty, and that would be a problem. Make sure to debug using the accessibility tree when you’re working with web forms.
+
+Of course, it’s not only about forms. There are elements that shouldn’t be exposed to users of screen readers — for example, a menu item with an accompanying arrow.
+
+![image-20250324225225837](/img/image-20250324225225837.png)
+
+The arrow is an HTML symbol inside a span. When inspected, it shows the text as “Services ▼”, which is not correct. A screen reader would read this as: “Services down pointing black pointer”. Very confusing. Debugging such issues as early as possible is highly recommended. The solution is to use `aria-hidden=true` for the span element.
+
+### Fix Unclickable Elements
+
+Interaction with buttons and links is vital. When an element is expected to be clickable but is not, that is a problem. Misuse of a CSS property can prevent an element from being interactive. Consider this example:
+
+```css
+.element {
+  pointer-events: none;
+}
+```
+
+CSS `pointer-events` prevent, for example, an event on a button from happening. In this case, when the user hovers over it:
+
+- the cursor won’t change,
+- clicking on it does nothing.
+
+A simple CSS property can prevent a button from being clickable. Misusing properties can ruin the experience, resulting in the loss of users.
+
+## Debugging CSS Performance
+
+Some CSS properties can cause performance issues when used incorrectly for animation. The properties that any browser can animate cheaply are:
+
+- transforms (`translate`, `scale`, `rotate`);
+- opacity.
+
+Using other properties for animation is risky and could impair performance. Let’s go over how the browser calculates its styles. Here are the steps that the browser takes:
+
+1. **Recalculate styles**: Calculate the styles that are being applied to each element.
+2. **Layout**: Assign the width, height, and position of each element.
+3. **Paint**: Paint all elements to layers.
+4. **Composite layers**: Draw the layers to the screen.
+
+The least-heavy step is composition. To achieve good performance, use only the `transform` and `opacity` properties. The figure below compares `left` and `transform: translateX` for animation.
+
+![image-20250324225253410](/img/image-20250324225253410.png)
+
+Notice how busy the `left` timeline is. The browser keeps recalculating the styles while the animation is happening. Meanwhile, `transform: translateX` is very different; the browser’s work is light.
+
+To check the performance of your web page, open up the DevTools, and select the “Performance” tab. From there, you can start profiling and doing a test. A profile is like a test that runs on the page for some time (usually seconds). When it’s done, you can see a timeline with all of the details on how the browser calculated the styles.
+
+Our concern with the CSS is the recalculating and compositing. Avoid using heavy CSS properties for animation.
+
+## Multiple Browser Profiles
+
+You likely use different browsers, each of which stores the history and private information of your browsing. Debugging and testing websites in a browser you use every day might not make sense. You’ll need something fresh, without a history or cache, so that you can test without any unwanted issues, like CSS caching, and to avoid extensions that might cause bugs.
+
+For this reason, a dedicated browser profile for testing is recommended. Here is how to create one in Chrome:
+
+1. In the top-right corner, click on the user avatar.
+2. Click “ Add +” .
+3. Name the pro^le (for example, “Dev”), and click “ Add” .
+
+In Firefox, it’s a bit different:
+
+1. Open `about:profiles` in the browser’s URL field.
+2. Click on “Create a new profile” .
+3. Choose a name and click “Done” .
+4. On the same page, scroll down to find the profile that you created, and click on “Launch profile in a new browser” .
+
+Done! You’ve created a profile especially for testing and debugging.
+
+## Rendering and Emulation
+
+In Chrome, we can emulate different rendering and emulation media queries, to help us debug for the CSS query `@media print`. We can also debug the light- and dark-mode versions of a website with the `prefer-color-scheme` media query.
+
+To access the rendering and emulation settings, follow these steps:
+
+1. Open the DevTools, and click the vertical dots menu.
+2. Choose “More tools” and then “Rendering”.
+3. Scroll down and you will find the emulation options.
+
+### CSS Print Styles
+
+![image-20250324225325779](/img/image-20250324225325779.png)
+
+We can use a media query to edit the CSS styles and tailor the page to be printed. To debug and emulate how a web page will look when it’s printed, we can either print the page and save it as a PDF file or use the emulation feature in Chrome.
+
+```css
+@media print {
+  /* All of your print styles go here. */
+  .header,
+  .footer {
+    display: none;
+  }
+}
+```
+
+The header and footer of a website might not need to be printed, so they can be hidden with the print media query.
+
+### CSS Media `prefer-color-scheme`
+
+![image-20250324225350017](/img/image-20250324225350017.png)
+
+With iOS officially supporting them, dark-mode user interfaces are rising in popularity and becoming supported on the web as well. In CSS, we can use the following to detect whether the user prefers dark or light mode:
+
+```css
+.element {
+  /* Light-mode styles (the default) */
+}
+@media (prefer-color-scheme: dark) {
+  .element {
+    /* Dark-mode styles */
+  }
+}
+```
+
+On macOS, you can switch between the dark and light mode of a website by changing the system preferences.
+
+![image-20250324225404691](/img/image-20250324225404691.png)
+
+While this works, it might not be practical when you’re working on a lot of changes. Luckily, it’s possible to test that in the rendering settings. We can emulate the media query `prefer-color-scheme: dark` or `prefer-color-scheme: light`.
+
+### CSS Media `prefers-reduced-motion`
+
+![image-20250324225419045](/img/image-20250324225419045.png)
+
+You can’t assume that all users will be fine with animation playing here and there on your website. Some people prefer not to see animation on a page because it can affect accessibility. A media query checks whether the user has requested that the system minimize non-essential motion.
+
+```css
+.element {
+  animation: pulse 1s linear infinite both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .element {
+    animation: none;
+  }
+}
+```
+
+Better yet, you can have simpler animation for users who prefer reduced motion.
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .element {
+    animation-name: simple;
+  }
+}
+```
+
+With that, we’re done going over the browser’s DevTools. Let’s go over the other methods we can use to test and debug CSS.
+
+## Virtual Machines
+
+In the course of your work as a web developer, you will need to test in browsers and on operating systems other than the ones you normally use. For instance, you might use macOS but want to test on Chrome for Windows. In this case, the cheapest solution is to use a virtual machine. I recommend using VirtualBox because it’s free, easy to use, and works on both macOS and Windows.
+
+Also, Microsoft offers free copies of Windows to test in Edge and Internet Explorer 11 browsers.
+
+## Online Services
+
+Similar to a virtual machine, some online services enable you to test on hundreds of types of devices. However, they’re not free, and they depend on a fast internet connection.
+
+## Mobile Devices
+
+Testing on real mobile devices can’t be compared to testing with the browser’s DevTools. The reason is that it’s not possible to emulate a real device in the DevTools. The touch screen itself plays a huge role in testing a website.
+
+I recommend, if feasible, buying two Android phones to keep as test devices. Don’t invest more than $150 per device. Another solution would be to use your family’s phones. I always borrow my mom’s phone to double-check things on Android.
+
+**Tip**: If your web project is run on `localhost`, you can open its link on any mobile devices that are connected to the same Wi-Fi network. For example, if the project is running on `localhost:3000`, here is how macOS users can get the full IP address:
+
+1. Go to “System Preferences”, then “Network”.
+2. In the “Connected” section, note the IP address (mine is `192.168.1.252`).
+3. On your mobile device, type the address with the port number (mine would be `192.168.1.252:3000`).
+
+Then, you can access the project on your mobile device. From there, you can update and edit the CSS to test it.
+
+## Mobile Browsers
+
+The browsers on mobile devices are different from the ones we use on the desktop. They are simpler and more lightweight. On iOS, the default browser is Safari. On Android, it depends on the phone’s manufacturer. For example, Samsung phones have a preinstalled browser named Samsung Internet.
+
+## Inspecting Your Mobile Browser
+
+By connecting your phone to your computer via USB or USB-C, you can inspect the code. For iOS, we can connect an iPhone and then inspect it with Safari on the computer. This makes checking and testing faster. For Android devices, the process is more complex. Follow along with [this great](https://developers.google.com/web/tools/chrome-devtools/remote-debugging) resource from Chrome DevTools blog.
+
+## Mobile Simulators
+
+macOS developers can access the iOS simulator, where they can test on multiple iOS device sizes (iPhone, iPad). Also, it’s possible to open the DevTools for each device you test.
+
+## Browser Support
+
+When starting a new front-end project, decide on the browsers you want to support. For example, will you support Internet Explorer 11? Or an old version of Firefox? Answer these questions ahead of time in order to prepare for what is coming.
+
+During the development process, you might accidentally use a CSS feature that is not supported in the browsers you want to support. Because you are designing according to progressive enhancement, you’ll need to check whether the CSS feature is supported, and, if so, then you would apply the feature as an enhancement.
+
+Tools such as [doiuse](https://github.com/anandthakker/doiuse) can be installed in your project via npm. Tell it the minimum browsers to support. The sample command below would run in the command line:
+
+```bash
+doiuse --browsers "ie >= 9, > 1%, last 2 versions" main.css
+```
+
+The output would list the CSS features, along with warnings — for example, that property X is supported only in Internet Explorer 11 and above.
+
+## Can I Use
+
+Can I Use is a tool that is very useful for searching for specific CSS features. It will tell you the history of the feature’s support. Sometimes, the support table for a property will save you hours of trial and error when fixing an issue.
+
+## Vendor Prefixes
+
+Browser vendors add prefixes for experimental web features that are still not finalized. In theory, developers shouldn’t use those properties on production websites until they are 100% supported; then, they can use the unprefixed versions. However, many developers are not patient enough to wait years for a property to be fully supported.
+
+According to MDN:
+
+> Browser vendors are working to stop using vendor prefixes for experimental features. Web developers have been using them on production Web sites, despite their experimental nature. This has made it more difficult for browser vendors to ensure compatibility and to work on new features; it’s also been harmful to smaller browsers who wind up forced to add other browsers’ prefixes in order to load popular web sites.
+
+That means you won’t see any vendor prefixes for future CSS features. That is great; it will make new features much faster to ship.
+
+MDN adds:
+
+> Lately, the trend is to add experimental features behind user-controlled flags or preferences, and to create smaller specifications which can reach a stable state much more quickly.
+
+MDN lists the prefixes for all major browsers:
+
+- `-webkit-` : Chrome; Safari; recent versions of Opera; almost all iOS browsers, including Firefox for iOS; basically, any WebKit-based browser
+- `-moz-` : Firefox
+- `-o-` : old pre-WebKit versions of Opera
+- `-ms-` : Internet Explorer and Microsoft Edge
+
+Here is sample usage of vendor prefixes:
+
+```css
+-webkit-transition: all 4s ease;
+-moz-transition: all 4s ease;
+-ms-transition: all 4s ease;
+-o-transition: all 4s ease;
+transition: all 4s ease;
+```
+
+Adding those prefixes manually while developing a website is not practical. A tool named Autoprefixer will do it automatically for you. Specify the browsers to support, and it does the rest.
+
+## Wrapping Up
+
+In this chapter, we’ve covered debugging environments (such as the DevTools), virtual machines, mobile devices, and online services. Mastering every detail of the DevTools will substantially reduce the time you spend on solving and debugging CSS.
+
+Next, we’ll explore some common CSS issues and learn how to solve them. Ready?

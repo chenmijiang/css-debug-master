@@ -1,0 +1,155 @@
+# Different Ways To Break a Layout
+
+This whole book is about finding CSS issues and solving them. Can we do the opposite? In this section, we will explore different ways to break a CSS layout and make it fail. Yes, you read that correctly.
+
+## Add Long Text Content
+
+As we’ve seen, a common reason for a layout bug is text being longer than expected. Adding long text randomly can reveal CSS issues that you haven’t thought about.
+
+![image-20250325213047635](/img/image-20250325213047635.png)
+
+The article title in the first box is short; the designer wrote it to make it fit. The developer copied the text and implemented the component based on that. When I tried to add long text, an interesting thing happened! The link icon was pushed to a new line.
+
+We can’t assume this is an error, but we can ask ourselves a couple of questions:
+
+- Is this behavior intentional? That is, when the text gets long, should it push other items to a new line?
+- Or is this unexpected, and should it not happen at all?
+
+Some CSS issues happen due to a misunderstanding between the designer and developer. The designer hasn’t worked out all possible scenarios, and the developer hasn’t thought about asking questions about the component. The fault is on both sides.
+
+### forceFeed.js
+
+Thankfully, tools exist to help us add random content and test for issues. [forceFeed.js](https://github.com/Heydon/forceFeed) is one of them. Let’s go through how it works.
+
+#### Install
+
+First, install it via `npm` or `bower`:
+
+```bash
+npm install forcefeed
+# or
+bower install forcefeed
+```
+
+Or simply download the JavaScript file from the GitHub repository.
+
+#### Include the Script
+
+Include the script after the page’s content and before the end of the body element.
+
+```html
+  <script src="path/to/forceFeed.js"></script>
+</body>
+```
+
+#### Add Attributes to Elements
+
+Add the `data-forcefeed` attribute to any element you want to add random content on.
+
+```html
+<div class="person">
+  <h3 class="name" data-forcefeed="words|2"></h3>
+  <p class="description" data-forcefeed="sentences|3|6">This will be overridden</p>
+</div>
+```
+
+The first one, `data-forcefeed="words|2"`, will generate two random words, according to the defined array, and `data-forcefeed="sentences|3|6"` will generate a random number of sentences ranging between three and six.
+
+#### Add the Arrays
+
+```js
+window.words = ['Design', 'Work', 'Awesome', 'Cool'];
+window.sentences = [
+  'Can you break me?',
+  'I love food and baking',
+  'How are you today?',
+  'When was the last time you saw mom?',
+];
+```
+
+#### Execute the Script
+
+Finally, we need to make the script work on the page.
+
+```js
+forceFeed({ words: window.words, sentences: window.sentences });
+```
+
+With that, we can now refresh the page ( `Command` or `Control` + `R` ) to see the content change. Perhaps you will notice a broken element.
+
+## Try Content in Different Languages
+
+If you’re working on a multilingual website, then the chances are high that some design components will break when they have different content.
+
+![image-20250325213249095](/img/image-20250325213249095.png)
+
+We might have an English title that has modified kerning (the spacing between characters). It might work great, but when the translated page has Arabic content in right-to-left (RTL) mode, the text breaks. Arabic has no such thing as kerning.
+
+Another bug can occur when we assume a specific minimum size for a button component. When the content is translated into another language, it might look different.
+
+![image-20250325213310756](/img/image-20250325213310756.png)
+
+On Twitter, the “Done” button looks good in English. In Arabic, the button looks too small and is not easily noticeable. The reason is that the button has a rule of `min-width: 40px`. This can be fixed by increasing the minimum width of the button.
+
+These bugs related to language are important and shouldn’t be ignored. If you are interested in learning more about the issue, I’ve written a complete guide about it, [RTL Styling 101](https://rtlstyling.com/).
+
+## Resize the Browser’s Window
+
+This is one of the easiest ways to break a layout and uncover its weaknesses. When you resize the browser window, you’ll see some issues that you wouldn’t normally notice. One interesting area to focus on is what I call “in-between” design cases. I’ve written a [detailed article](https://ishadeed.com/article/in-between/) about it on my blog, and I’d like to go over the concepts again here.
+
+> In responsive web design, it’s common to work on different variations of a page. A typical web page should have two variations at least, one for small screen sizes (e.g. mobile) and the other for large screens (e.g. desktop). Often times, we forget about the `in-between` design variation, and we end up with a component or section being too wide or narrow.
+
+In other words, you will uncover more issues when you test the in-between design states. Believe me, you will find some interesting issues that you or the team haven’t considered.
+
+![image-20250325213407658](/img/image-20250325213407658.png)
+
+Here we have some cards that need to be one column on mobile and two columns on tablets. The in-between state makes the cards look too wide, which can affect readability. While this might not seem like a bug, it is.
+
+Another clear example of the importance of testing the in-between state is the following footer design, taken from a real project.
+
+![image-20250325213427906](/img/image-20250325213427906.png)
+
+In the middle view, the social media icon for Instagram breaks onto a new line. Such behavior is not expected and shouldn’t happen at all.
+
+This should suffice to illustrate that such issues can’t be ignored. Thanks to the simple trick of browser resizing, we can discover them fairly easily.
+
+## Avoid Placeholder Images
+
+Images play an important role in making web pages accessible and easy to read. Your job as a front-end developer is to provide a solid structure for a component that can handle any image used. For example, you might be working on a hero section with a perfect cover image and accompanying text.
+
+![image-20250325213514475](/img/image-20250325213514475.png)
+
+Breaking such a component is easy — just change the image. Suddenly, you’ll see that the text is hard to read. We’ve forgotten to place a semi-transparent black overlay that would make the text easy to read. Unfortunately, some designers assume that the implementation of their design will exactly match their mockup. That isn’t the case. A lot of changes will happen in the development process.
+
+By changing images and trying different styles on them, we can uncover hidden issues.
+
+Image sizes and dimensions are another area that deserves attention. As the front-end developer, you might prepare a media component that can be used for images in things like recipes and articles. One question to pose is: What image dimensions are expected or recommended? Should the content manager be restricted to uploading images with predefined sizes to the content management system (CMS), or should they be free to upload whatever sizes they like?
+
+![image-20250325213547667](/img/image-20250325213547667.png)
+
+We have a media component containing an image here. The first one is the default image provided by the designer, and the second one is added by an author to the CMS. That inconsistency is not good. The designer and developer should agree on image sizes, and then teach the authors to follow that standard.
+
+If you don't have much control over the image size, then I recommend using CSS `object-fit` with a fixed height for the image. That can keep all images within the same height without breaking them.
+
+```css
+.media__thumb {
+  height: 220px;
+  object-fit: cover;
+}
+```
+
+## Open in Internet Explorer
+
+Nope, this is not a joke. Internet Explorer is well known for breaking websites. If your website is required to work in Internet Explorer, then you will need to think about every CSS decision you’ve made. For example, if you’ve used CSS grid for the layout, then it’s recommended to add a fallback using `flexbox` or an older layout method (`floats`, `inline-block`, etc.).
+
+## Rotate Between Portrait and Landscape Orientation
+
+While working on an update to the mobile menu of my personal website, I found an interesting design issue. Something as simple as rotating the device from portrait to landscape orientation can reveal unexpected issues, especially if some elements are fixed or absolutely positioned.
+
+![image-20250325213701039](/img/image-20250325213701039.png)
+
+The “close” button is absolutely positioned and horizontally centered. In landscape orientation, the button overlaps with the navigation, which is clearly not intended. Testing in both orientations is important.
+
+## Wrapping Up
+
+In this chapter, we learned about how to intentionally break a layout. Next, we will explore browser inconsistencies and implementation bugs.
