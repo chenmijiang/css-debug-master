@@ -20,11 +20,19 @@ This project serves as a knowledge base for CSS debugging, providing detailed ex
 ## Getting Started
 
 1. Clone the repository
+
+   ```bash
+   git clone https://github.com/chenmijiang/css-debug-master.git
+   ```
+
 2. Install dependencies:
+
    ```bash
    bun install
    ```
+
 3. Run the development server:
+
    ```bash
    bun run dev
    ```
