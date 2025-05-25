@@ -1,5 +1,6 @@
 import Logo from '@/components/Logo';
 import { generateThemeConfig, Locale } from '@/theme/theme.config';
+import { Analytics } from '@vercel/analytics/next';
 import { type Metadata } from 'next';
 import { Layout, Navbar } from 'nextra-theme-docs';
 import 'nextra-theme-docs/style.css';
@@ -7,6 +8,8 @@ import { Head } from 'nextra/components';
 import { getPageMap } from 'nextra/page-map';
 
 import './globals.css';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 export const metadata: Metadata = {
   title: {
@@ -49,6 +52,7 @@ export default async function RootLayout({
       <body>
         <Layout {...themeConfig} navbar={navbar} pageMap={pageMap}>
           {children}
+          {isProduction && <Analytics />}
         </Layout>
       </body>
     </html>
