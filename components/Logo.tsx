@@ -6,10 +6,8 @@ interface LogoProps {
 export default function Logo({ className }: LogoProps) {
   return (
     <svg
-      width="429"
-      height="81.29452054794521"
       viewBox="0 0 438 83"
-      className={clsx('w-full', className)}
+      className={clsx('w-auto', className)}
     >
       <defs id="SvgjsDefs2391"></defs>
       <g id="SvgjsG2392" transform="matrix(1,0,0,1,0,0)" fill="#0148fe">
