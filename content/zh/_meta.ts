@@ -19,7 +19,7 @@ const meta: MetaRecord = {
     title: '前言',
   },
   overview: {
-    title: '简介和概览',
+    title: '引言与概述',
   },
   introduction_to_css_bugs: {
     title: 'CSS Bug 简介',
