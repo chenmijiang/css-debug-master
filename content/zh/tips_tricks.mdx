@@ -241,12 +241,10 @@ html {
 为了完善它，我们可以恢复不应该被反转的元素（如图像和视频）：
 
 ```css
-html {
-  img,
-  video,
-  iframe {
-    filter: invert(100%) hue-rotate(-25deg);
-  }
+html img,
+html video,
+html iframe {
+  filter: invert(100%) hue-rotate(-25deg);
 }
 ```
 
