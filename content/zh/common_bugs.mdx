@@ -1,5 +1,3408 @@
-# 通常会导致 bug 的 CSS 属性
+# 常见导致错误的 CSS 属性
 
-import SupportTranslateTip from '@/components/SupportTranslateTip';
+网络浏览器在过去几年中发展了很多，这导致了更一致的网站。尽管如此，它们仍然不完美，一些问题可能会让开发者感到困惑。增加挑战的是不同的屏幕尺寸、多语言网站和人为错误。
 
-<SupportTranslateTip />
+当你实现设计时，你可能会因为各种原因遇到 CSS 错误，包括视觉和非视觉的，我在第 2 章中介绍过。其中一些很难追踪。
+
+在本章中，我们将深入研究 CSS 属性及其问题。我们的目标是详细了解某些属性的常见错误，并学习如何正确解决它们。
+
+## 盒子尺寸
+
+`box-sizing` 属性控制如何计算元素的总宽度和高度。默认情况下，元素的宽度和高度仅分配给内容框，这意味着 `border` 和 `padding` 会添加到该宽度上。
+
+如果你没有使用 CSS 重置文件，你可能会忘记重置 box-sizing 属性，这可能导致以下情况之一：
+
+- **水平滚动**
+  块元素占用其父元素的全部宽度。如果它有边框或内边距，这将添加到其宽度上，这将导致水平滚动。
+- **过大的元素**
+  元素的大小可能比你想要的要大。
+
+为了避免这种情况，确保属性被正确重置：
+
+```css
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+```
+
+有了这个，我们可以确保最重要的 CSS 属性按预期工作。值得一提的是，使 box-sizing [继承](https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/) 更好，因为它将使所有元素默认从 html 元素继承这个 box-sizing 属性。
+
+## 显示类型
+
+`display` CSS 属性控制元素是块元素还是内联元素。它还确定应用于其子项目的布局类型，例如 grid 或 flex。
+
+当使用不当时，`display` 类型可能会让开发者感到困惑。在本节中，我们将介绍 `display` 属性可能出错的一些方式。
+
+### 内联元素
+
+诸如 `span` 和 `a` 之类的元素默认是内联的。假设我们想要为 `span` 添加垂直内边距：
+
+```css
+span {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+```
+
+这不会起作用。垂直内边距对内联元素不起作用。你必须将元素的 `display` 属性更改为 `inline-block` 或 `block`。
+
+`margin` 也是如此：
+
+```css
+span {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+```
+
+这个边距不会有效果。你必须将 `display` 类型更改为 `inline-block` 或 `block`。
+
+![image-20250325220454633](/img/image-20250325220454633.png)
+
+#### 间距和内联元素
+
+每个内联元素都被视为一个单词。以下面为例：
+
+```html
+<span>Hello</span> <span>World</span>
+```
+
+这将渲染 `Hello World`。注意两个单词之间的间距。这是从哪里来的？好吧，因为内联元素被视为一个单词，浏览器会自动在单词之间添加空格——就像你输入句子时每个单词之间有空格一样。
+
+当我们有一组链接时，这变得更有趣：
+
+![image-20250325220524451](/img/image-20250325220524451.png)
+
+链接彼此相邻，它们之间有空格。当你处理 `inline` 或 `inline-block` 元素时，这些空格可能会造成混淆，因为它们不是来自 CSS——空格出现是因为链接是内联元素。
+
+假设我们有一个内联的类别标签列表，我们希望它们之间有 8 像素的空间。
+
+```html
+<ul>
+  <li class="tag"><a href="#">Food</a></li>
+  <li class="tag"><a href="#">Technology</a></li>
+  <li class="tag"><a href="#">Design</a></li>
+</ul>
+```
+
+在 CSS 中，我们会这样添加间距：
+
+```css
+.tag {
+  display: inline-block;
+  margin-right: 8px;
+}
+```
+
+你会期望它们之间的空间等于 8 像素，对吧？事实并非如此。间距将是 8 像素**加上前面提到的字符间距的额外 1 像素**。以下是解决这个问题的方法：
+
+```css
+ul {
+  display: flex;
+  flex-wrap: wrap;
+}
+```
+
+通过向父元素添加 `display: flex`，额外的间距将消失。
+
+### 块元素
+
+`block` 显示类型是某些 HTML 元素的默认值，例如 `div`、`p`、`section` 和 `article`。在某些情况下，我们可能需要应用 `block` 显示类型，因为元素是内联的，例如：
+
+- 表单标签和输入，
+- `span` 和 `a` 元素。
+
+当 `display: block` 应用于 `span` 或 `a` 时，它会正常工作。但是，当它应用于输入时，它不会按预期影响元素。
+
+```css
+input[type='email'] {
+  display: block; /* The element does not take up the full width. */
+}
+```
+
+原因是表单元素是**替换元素**。什么是替换元素？它是一个 HTML 元素，其宽度和高度是预定义的，没有 CSS。
+
+![image-20250325220636095](/img/image-20250325220636095.png)
+
+要覆盖该行为，我们需要在表单元素上强制全宽。
+
+```css
+input[type='email'] {
+  display: block;
+  width: 100%;
+}
+```
+
+除了表单输入之外，还有其他替换元素，包括 `video`、`img`、`iframe`、`br` 和 `hr`。以下是关于替换元素的一些有趣事实：
+
+- 不可能对替换元素使用伪元素。例如，向输入添加 `:after` 伪元素是不可能的。
+- 替换元素的默认大小是 300 x 150 像素。如果你的页面有 `img` 或 `iframe` 并且由于某种原因没有加载，浏览器将给它这个默认大小。
+
+考虑以下示例：
+
+```css
+img {
+  display: block;
+}
+```
+
+我们有一个带有 `display: block` 的图像。你期望它会占用其容器的全部宽度吗？它不会。你需要通过添加以下内容来强制这样做：
+
+```css
+img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+}
+```
+
+值得[提及](https://bitsofco.de/styling-broken-images/)的是，当图像加载失败时，它不被视为替换元素。你实际上可以向它添加 `::before` 和 `::after` 伪元素：
+
+```css
+img::after {
+  content: 'The image didn't load';
+}
+```
+
+#### 图像下方的间距
+
+你是否注意到你添加的 `img` 下方有一点空间？你没有添加边距或任何东西。空间存在是因为 `img` 被视为内联元素，这类似于有一个字符在其下方有一些空间。
+
+![image-20250325220721692](/img/image-20250325220721692.png)
+
+要修复这个问题，向图像添加 `display: block`。间距将被移除。
+
+#### `legend` 元素
+
+如果你使用 `fieldset` 来分组表单输入，添加一个 `legend` 元素。默认情况下，它不会占用其父元素的全部宽度，除非你强制它。
+
+```html
+<fieldset>
+  <legend>What's your favorite meal?</legend>
+  <input type="radio" id="chicken" name="meal" />
+  <label for="chicken">Chicken</label>
+  <input type="radio" id="meat" name="meal" />
+  <label for="meat">Meat</label>
+</fieldset>
+```
+
+`legend` 元素是块级的，但其宽度将保持不变，因为它默认具有 `min-width: max-content`，这意味着它具有其文本内容的宽度。要使其全宽，请执行以下操作：
+
+```css
+legend {
+  width: 100%;
+}
+```
+
+### 使用 `display` 与定位元素
+
+当元素被定位时（`position` 不是 `static`），`display` 属性的行为会有所不同。考虑以下示例：
+
+```css
+.element {
+  position: absolute;
+  display: inline;
+}
+```
+
+即使我们将 `display` 设置为 `inline`，元素也会表现得像块元素。这是因为定位元素会自动变成块级元素。
+
+这种行为适用于以下定位值：
+- `absolute`
+- `fixed`
+- `sticky`（在某些情况下）
+
+这意味着你可以为定位元素设置宽度和高度，即使它们的 `display` 值是 `inline`。
+
+```css
+.element {
+  position: absolute;
+  display: inline;
+  width: 200px; /* 这会起作用 */
+  height: 100px; /* 这也会起作用 */
+}
+```
+
+### 内联元素的对齐
+
+内联元素的垂直对齐可能会令人困惑。默认情况下，内联元素与其父元素的基线对齐。
+
+```css
+.icon {
+  vertical-align: middle;
+}
+```
+
+`vertical-align` 属性只对内联或表格单元格元素有效。如果你想要垂直居中一个块元素，你需要使用其他方法，如 flexbox 或 grid。
+
+### CSS 文件中的内联显示覆盖
+
+有时，你可能会遇到这样的情况：你在 CSS 文件中设置了 `display: block`，但元素仍然表现为内联元素。这通常是因为有内联样式覆盖了你的 CSS：
+
+```html
+<div style="display: inline;" class="my-element">Content</div>
+```
+
+```css
+.my-element {
+  display: block; /* 这会被内联样式覆盖 */
+}
+```
+
+内联样式具有更高的特异性，会覆盖 CSS 文件中的样式。
+
+### 浮动和块显示
+
+当元素被浮动时，它会自动变成块级元素，无论其原始 `display` 值如何：
+
+```css
+.element {
+  float: left;
+  display: inline; /* 这会被忽略，元素会表现为块级 */
+}
+```
+
+这意味着浮动的内联元素可以设置宽度和高度。
+
+### 浮动和 Flex 显示
+
+如果一个元素同时设置了 `float` 和 `display: flex`，`float` 属性会被忽略：
+
+```css
+.element {
+  display: flex;
+  float: left; /* 这会被忽略 */
+}
+```
+
+Flexbox 和 Grid 布局会使 `float` 属性失效。
+
+### 显示和隐藏 `br` 元素
+
+`br` 元素用于创建换行。有时，你可能想要在某些情况下隐藏它：
+
+```css
+br {
+  display: none; /* 在桌面上隐藏换行 */
+}
+
+@media (max-width: 768px) {
+  br {
+    display: block; /* 在移动设备上显示换行 */
+  }
+}
+```
+
+这对于响应式设计很有用，你可能希望在不同屏幕尺寸上有不同的文本换行行为。
+
+### 避免使用显示类型的情况
+
+有一些情况下你应该避免更改 `display` 类型：
+
+#### 隐藏表单的输入标签
+
+不要使用 `display: none` 来隐藏表单标签，因为这会影响可访问性：
+
+```css
+/* 不好的做法 */
+label {
+  display: none;
+}
+```
+
+#### 样式化复选框
+
+不要尝试通过更改 `display` 类型来样式化复选框：
+
+```css
+/* 不好的做法 */
+input[type="checkbox"] {
+  display: block;
+  width: 50px;
+  height: 50px;
+}
+```
+
+相反，使用伪元素或自定义样式方法。
+
+## 边距
+
+如果页面上有两个或更多元素彼此靠近，用户会认为它们彼此相关。`margin` CSS 属性对于帮助我们使设计看起来更有序和一致很重要。
+
+### 边距折叠
+
+这是边距最常见的问题之一。假设你有两个元素，上面的元素有 `margin-bottom`，下面的元素有 `margin-top`。两个值中较大的那个将用作元素之间的边距，另一个将被浏览器忽略。
+
+![image-20250325221203681](/img/image-20250325221203681.png)
+
+```html
+<div class="item-1"></div>
+<div class="item-2"></div>
+```
+
+```css
+.item-1 {
+  margin-bottom: 50px;
+}
+.item-2 {
+  margin-top: 30px;
+}
+```
+
+混合顶部和底部边距会导致问题。为了避免这种情况，使用单向边距——例如，为所有元素添加 `margin-bottom`。注意，如果元素是 flexbox 或 grid 容器的一部分，那么边距不会折叠。
+
+### 边距和内联元素
+
+如 `display` 部分所述，诸如 `span` 之类的内联元素不接受垂直边距，直到它们的显示类型被更改。确保垂直边距添加到正确类型的元素上。
+
+### 预防性边距
+
+我称之为"预防性"边距，因为它就是这样的。假设我们有两个元素：
+
+![image-20250325221240479](/img/image-20250325221240479.png)
+
+我们向其中一个元素的右侧或左侧添加边距（在这种情况下，向标题的右侧），以防其内容变得太长并使元素太靠近相邻的元素。如果标题太长，边距会防止它粘到图标上。
+
+### 居中元素
+
+因为 `margin: auto` 是居中元素的流行方法，重要的是要提到它只适用于块级元素。
+
+```css
+span {
+  width: 500px;
+  margin: 0 auto;
+}
+```
+
+除非 `span` 更改为块级元素，否则这不会起作用。
+
+### 自动边距和定位
+
+当元素被绝对定位时，可以使用 `margin: auto` 来水平和垂直居中，而无需使用变换或其他 CSS 技术（如 flexbox）。
+
+![image-20250325221310201](/img/image-20250325221310201.png)
+
+```css
+.element {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  margin: auto;
+}
+```
+
+在元素上设置 `width` 和 `height` 使得仅使用 `margin: auto` 就可以居中项目。
+
+### 自动边距和 Flexbox
+
+使用 flexbox，我们可以使用 `auto` 边距将元素推到一个方向的最远处。
+
+![image-20250325221342358](/img/image-20250325221342358.png)
+
+按钮有规则 `margin-left: auto`，这将其推到最右边。Flexbox 和自动边距在这种用途上配合得很好。我们可以使用这种技术来对齐元素而无需额外的标记。
+
+## 内边距
+
+`padding` 属性在元素**内部**添加空间。这就是它与 `margin` 的区别。关于内边距有一些误解。让我们探索它们。
+
+### 使用内边距与高度
+
+假设你有一个固定高度的元素，比如按钮。控制元素内的垂直间距可能会令人困惑，因为大的内边距值可能会将文本向下推并破坏按钮。
+
+![image-20250325221415666](/img/image-20250325221415666.png)
+
+在左侧的按钮中，注意文本被推得太远了。原因是 CSS 中的这个：
+
+```css
+.button {
+  height: 40px;
+  padding-bottom: 10px;
+}
+```
+
+`button` 元素永远不应该给定固定高度。这会使事情变得复杂，控制按钮会更困难。相反，你应该使用垂直 `padding`。
+
+当处理在其字符中有额外间距的 Web 字体时，你可能会遇到这种情况。在这种情况下，你可能需要调整顶部或底部内边距以垂直居中按钮的文本。
+
+![image-20250325221443080](/img/image-20250325221443080.png)
+
+```css
+.button {
+  padding: 3px 16px 8px 16px;
+}
+```
+
+在这里，我们调整了内边距，以便文本可以在按钮中垂直居中。
+
+### 内边距和内联元素
+
+如 `display` 部分所述，除非元素的显示类型不是 `inline`，否则垂直内边距不会起作用。
+
+### 内边距简写
+
+内边距的简写按顺序为上、右、下、左。有时使用起来令人困惑，`margin` 也是如此。你可能最终会做以下事情：
+
+```css
+.element {
+  padding-top: 20px 20px 0 20px;
+  /* … instead of: */
+  padding: 20px 20px 0 20px;
+}
+```
+
+这将是一个错误。`padding-top` 属性只接受一个值，所以写四个值会使规则无效。这可能是内边距不按你预期工作的原因。确保输入正确的属性名称。
+
+记住 `padding` 和 `margin` 简写的正确顺序令人困惑，即使对于有经验的前端开发者也是如此。时钟是记住它的简单方法：
+
+![image-20250325221515807](/img/image-20250325221515807.png)
+
+记住从 `top` 开始，其余的会跟随。
+
+### 基于百分比的内边距
+
+使用百分比作为内边距是可以的，但要使其按你期望的方式工作，请记住它基于元素的宽度工作。
+
+```css
+.element {
+  width: 200px;
+  padding-top: 10%;
+}
+```
+
+此元素的 `padding-top` 的计算值是 20px。当你调试具有基于百分比的内边距的元素时，记住它是如何计算的。
+
+值得一提的是，在旧版本的 Firefox 中，flex 项目的顶部和底部基于百分比的内边距被不同地处理。Firefox 使用元素的高度而不是宽度来确定内边距的值。这个[问题在 Firefox 61 中得到修复](https://www.bram.us/2017/07/30/vertical-marginspaddings-and-flexbox-a-quirky-combination/)。
+
+## 宽度属性
+
+设置宽度是网页设计中最重要的事情之一。我们可以显式或隐式设置宽度。在本节中，我们将介绍 `width` 可能令人困惑的情况。
+
+### 内联元素不接受宽度或高度
+
+诸如 `span` 之类的内联元素不会接受 `width` 或 `height` 属性。这可能令人困惑。元素只有在其显示设置为 `inline` 以外的其他内容（如 `inline-block` 或 `block`）时才接受 `width` 和 `height`。
+
+### 不推荐固定宽度
+
+当在元素上使用固定宽度时，很可能会在移动设备上导致水平滚动。使用 `max-width` 更好，因为它会防止元素比视口更宽。
+
+![image-20250325221623405](/img/image-20250325221623405.png)
+
+这里我们有一个标题列表，以及一个描述。描述需要有最大宽度以保持每行字符数易于阅读。如果你为文本使用固定宽度，你会注意到移动设备上的水平滚动。我花了五分钟想知道问题的原因，然后才确定固定宽度是罪魁祸首。
+
+### 图像的全宽
+
+默认情况下，HTML `img` 将根据其内容调整大小。为了防止图像比视口大，我们可以设置 `width` 属性。
+
+```css
+img {
+  width: 100%;
+}
+```
+
+使用 `width: 100%`，`img` 的宽度将等于其父元素的宽度。但是，有时我们不想要那种行为。这里有一个更好的替代方案，即设置 `max-width`。
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+上述方法确保以下内容：
+
+- 小图像（比如，650 x 250 像素）不会占用宽父元素（比如，1500 像素）的全宽。想象这样的图像占用那个容器！它会看起来像素化。
+- 另一方面，如果图像比视口宽，那么其宽度将等于其父元素的 100%。
+
+### 使用 `100%` 与 `auto` 作为宽度
+
+诸如 `div` 和 `p` 之类的块级元素的初始宽度是 `auto`，这让元素占用其父元素的全宽。在某些情况下，你可能需要 `div` 不占用全宽。
+
+```css
+div {
+  width: 50%;
+  margin: 20px;
+}
+@media (min-width: 800px) {
+  div {
+    width: 100%;
+  }
+}
+```
+
+此元素的宽度是其父元素的 `50%`。当视口足够大时，我们希望它占用全宽。将宽度设置为 `100%` 会导致其内容占用其父元素的全宽而不计算 `margin`。
+
+![image-20250325221726700](/img/image-20250325221726700.png)
+
+这是一个问题。为了解决它，我们应该使用 `auto` 而不是 `100%`。根据 CSS 规范：
+
+> 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
+
+注意，当使用 `box-sizing: border-box` 时，`padding-left` 和 `padding-right` **不**包含在计算中。
+
+将宽度设置为 `auto` 将导致内容框的宽度是内容本身减去边距、内边距和边框。
+
+```css
+@media (min-width: 800px) {
+  div {
+    width: auto;
+  }
+}
+```
+
+我写了一篇关于 CSS 中 `auto` 的[详细文章](https://ishadeed.com/article/auto-css/)，如果你想深入了解这个主题，值得查看。
+
+### 带有 `position: absolute` 的图像不需要宽度或高度
+
+你可能不会想到这一点，但知道这一点很有趣。考虑以下内容：
+
+```html
+<div class="media">
+  <img src="cool.jpg" alt="" />
+</div>
+```
+
+```css
+.media {
+  position: relative;
+  width: 300px;
+  height: 200px;
+}
+
+.media img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+```
+
+你可能期望图像会占用其父元素的全宽，因为它相对于四个边绝对定位。好吧，那是错误的。如果图像足够大，它会突破其父元素。
+
+为了防止这种情况发生，为图像设置宽度和高度。
+
+```css
+.media img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+```
+
+## 高度属性
+
+### 基于百分比的全高度
+
+在 CSS 中设置基于百分比的高度起初可能看起来直观，但事实并非如此。除非其父元素的高度被**明确**定义，否则你无法为元素设置基于百分比的高度。
+
+```css
+.parent {
+  padding: 2rem;
+}
+
+.child {
+  height: 100%;
+}
+```
+
+子元素不会占用其父元素的 `100%`。以下是如何使其占用全高度：
+
+```css
+.parent {
+  height: 200px;
+  padding: 2rem;
+}
+```
+
+这样，子元素的基于百分比的高度值将基于某些东西，它将按预期工作，即使不推荐使用绝对 `height` 值。
+
+### 填充可用剩余空间的高度
+
+假设我们有一个卡片网格，我们使用 CSS grid 来布局它们。
+
+```html
+<div class="media-list">
+  <div class="card">
+    <img class="card__thumb" src="thumb.jpg" alt="" />
+    <div class="card__content">
+      <h2><!-- Title --></h2>
+      <p class="card__author"><!-- Author --></p>
+      <p></p>
+    </div>
+  </div>
+  <div class="card"></div>
+</div>
+```
+
+```css
+.media-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(265px, 1fr));
+  grid-gap: 1rem;
+}
+```
+
+默认情况下，CSS grid 会使卡片的高度相等，这很有用。但有一个问题，当一张卡片的标题比另一张长时，`.card__content` 元素的高度会不同。
+
+![image-20250325221856372](/img/image-20250325221856372.png)
+
+为了解决这个问题，我们需要使卡片成为 flex 容器，然后强制 `.card__content` 填充可用空间。
+
+```css
+.card {
+  display: flex;
+  flex-direction: column;
+}
+.card__content {
+  flex-grow: 1;
+}
+```
+
+现在，我们想要使 `.card__content` 元素成为 flex 容器。最后，`.card__author` 元素将被给予 `margin-top: auto`，这样它就可以始终在卡片的基线上。
+
+```css
+.card__content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+.card__author {
+  margin-top: auto;
+}
+```
+
+![image-20250325221932305](/img/image-20250325221932305.png)
+
+### 基于百分比的宽度和无高度
+
+有时，你需要一种方法来调整元素大小而不必同时更改宽度和高度。我喜欢在 Twitter 网站上找到的一个模式，它通过仅更改 `width` 属性来调整头像大小。
+
+```html
+<a href="#" class="avatar">
+  <div class="avatar-aspect-ratio"></div>
+  <img alt="" src="me.jpg" />
+</a>
+```
+
+```css
+.avatar {
+  position: relative;
+  width: 25%;
+  display: block;
+}
+
+.avatar-aspect-ratio {
+  width: 100%;
+  padding-bottom: 100%;
+}
+
+.avatar img {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+```
+
+通过添加一个元素（`.avatar-aspect-ratio`）并使用 `padding-bottom: 100%` 规则，这最终等于头像的 `width`，结果将是一个正方形。图像本身是绝对定位的。
+
+![image-20250325222011812](/img/image-20250325222011812.png)
+
+注意只有宽度属性被调整大小；高度会跟随。有关该技术的更多详细信息，这里有一篇关于 CSS Tricks 的[很棒的文章](https://css-tricks.com/fluid-width-video/)。
+
+### 高度和视口单位
+
+我们可以使用视口单位与 `width` 或 `height` 来使元素占用视口的全宽或全高。我们将在这里处理视口高度单位。
+
+```css
+body {
+  height: 100vh;
+}
+```
+
+这将使 `body` 元素占用视口的全高度。但是，移动设备上的 Safari 有一个问题，因为它在计算中不包括地址栏，这导致 `height` 的值更高。
+
+一个解决方案是通过使用 `innerHeight` 方法[从 JavaScript 获得帮助](https://css-tricks.com/the-trick-to-viewport-units-on-mobile/)。
+
+```javascript
+// Get the viewport height and multiply it by 1% to get the vh value.
+let vh = window.innerHeight * 0.01;
+// Set the vh value in the CSS property
+document.documentElement.style.setProperty('--vh', `${vh}px`);
+```
+
+然后，我们在 CSS 中使用它：
+
+```css
+.my-element {
+  height: 100vh; /* Fallback for browsers that do not support custom properties */
+  height: calc(var(--vh, 1vh) * 100);
+}
+```
+
+通过获取浏览器的 `innerHeight`，我们可以在 `height` 属性中使用该值。
+
+这里有一个不使用 JavaScript 的解决方案，我从 [@AllingsSmitty](https://twitter.com/AllThingsSmitty/status/1254151507412496384) 那里学到的。
+
+```css
+.my-element {
+  height: 100vh;
+  height: -webkit-fill-available;
+}
+```
+
+通过为 `height` 使用内在值，浏览器将只填充可用的垂直空间。缺点是这在 Chrome 中会出现问题，因为该浏览器也理解 `-webkit-fill-available` 并且不会忽略它。我的建议是**不要使用**这个解决方案，直到其行为在浏览器中一致。
+
+## 设置最小或最大宽度
+
+在 CSS 中，我们有 `min-width` 和 `max-width` 属性。让我们探索它们发生的常见错误和混淆点。
+
+### 最小宽度
+
+#### 按钮的最小宽度
+
+为按钮元素设置最小宽度时，请记住它应该在多语言布局中工作。
+
+![image-20250325222124553](/img/image-20250325222124553.png)
+
+在这里，我们有一个带有 `min-width: 40px` 的按钮。它对英语布局完美工作。但是，当翻译成阿拉伯语时，由于其最小宽度，它变得非常小。这个例子来自 Twitter 的网站。这里的问题是按钮的宽度太短，这会使用户更难注意到它。
+
+为了防止这样的问题，总是用多种内容进行测试。即使网站只针对一种语言，用不同内容进行测试也不会有害。
+
+#### 最小宽度和内边距
+
+另一个混淆点是当我们只依赖 `min-width` 时。例如，带有 `min-width` 的按钮可能看起来不错，因为内容适合大小。但是，当按钮的文本变得有点长时，文本会靠近边缘。
+
+![image-20250325222151597](/img/image-20250325222151597.png)
+
+这样做的原因是作者盲目地依赖 `min-width` 并且没有考虑内容可能更长。
+
+#### 哪个具有更高的优先级：`min-width` 还是 `max-width`？
+
+当为元素同时使用 `min-width` 和 `max-width` 时，知道其中哪一个是活动的可能会令人困惑。让我们澄清这一点。
+
+如果 `min-width` 的值大于 `max-width` 的值，那么它将被作为宽度。
+
+![image-20250325222226006](/img/image-20250325222226006.png)
+
+```css
+.element {
+  width: 100px;
+  min-width: 50%;
+  max-width: 100%;
+}
+```
+
+#### 重置 `min-width`
+
+让我们探索在 CSS 中重置 `min-width` 属性的方法。
+
+##### 设置为 `0`
+
+`min-width` 的默认值是 `0`，但这对于 flex 子项目是不同的。
+
+flex 子项目的 `min-width` 是 `auto`，如前所述。
+
+##### 设置为 `initial`
+
+`initial` 值将重置为浏览器的初始值，这将是 `0` 或 `auto`，取决于项目是否是 flex 子项。
+
+一般来说，我建议使用 `initial` 来重置。但是，根据用例，你可能需要为 flex 子项目使用 `min-width: 0`。
+
+### 最大宽度
+
+#### 页面包装器的最大宽度
+
+`max-width` 属性的常见用例是将其作为元素的约束添加，例如页面包装器或容器。
+
+```css
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+```
+
+![image-20250325222354252](/img/image-20250325222354252.png)
+
+这可能看起来没问题，直到你将屏幕调整为小于 1200 像素。然后你会注意到 `.wrapper` 的子元素粘在左右边缘，这不是我们想要的。确保为页面容器添加内边距，以便它在移动设备上有水平偏移。
+
+```css
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+```
+
+![image-20250325222414906](/img/image-20250325222414906.png)
+
+#### 最大宽度的百分比
+
+当为最大宽度使用百分比值时，通常会在移动设备上忘记它。
+
+![image-20250325222442931](/img/image-20250325222442931.png)
+
+```css
+.element {
+  max-width: 50%;
+}
+```
+
+这在笔记本电脑或台式机上可能工作得很顺利。但是，在移动设备上，`50%` 可能是 150 或 200 像素，取决于视口的宽度。无论如何，计算的像素值都会很小，所以考虑移动尺寸很重要。
+
+```css
+@media (min-width: 800px) {
+  .element {
+    max-width: 50%;
+  }
+}
+```
+
+好多了。一旦有足够的空间，媒体查询将激活 `50%` 宽度。
+
+#### 基于内容设置最大宽度
+
+这可以被视为常见错误或常见需求，所以我将尝试将它们都解决。有时，你需要根据你拥有的内容设置最大宽度。当内容变化时，这可能很棘手。错误是基于内容设置宽度。
+
+![image-20250325222514820](/img/image-20250325222514820.png)
+
+我们有一个带有标题和描述的部分。我们希望包装器与内容一样宽，所以我们将尝试以像素为单位设置它。
+
+```css
+.wrapper {
+  max-width: 567px;
+}
+```
+
+在 CSS 中使用像 `567px` 这样的硬编码值不是一个好的做法，因为当内容更改时这很容易失败。解决方案是使用内在的 CSS 值。
+
+```css
+.wrapper {
+  max-width: max-content;
+}
+```
+
+这样，包装器的宽度将调整到内容，而无需我们硬编码值。
+
+#### 在包装器中约束图像
+
+`max-width` 的常见用例是约束 `img` 不要比其容器大。因为 `img` 元素是**替换元素**，其大小基于其内容。
+
+有时，大图像可能会超出其容器。解决方案只是使用前面提到的技术：
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+#### 重置 `max-width`
+
+假设我们需要为特定视口大小或条件重置 CSS 属性。在 CSS 中有几种重置 `max-width` 的方法。
+
+##### `none` 关键字值
+
+`none` 值对大小不设限制，这正是重置属性的目标。
+
+##### `initial` 关键字值
+
+这将属性设置为其初始默认值，即 `none`。
+
+##### `unset` 关键字值
+
+如果属性从其父元素继承，`unset` 关键字将值重置为继承值。如果不是，值将是 `initial`。
+
+我建议使用 `none` 关键字，因为它是最清楚的，你不必考虑后果。
+
+### 最小高度
+
+#### 为可变内容设置最小高度
+
+CSS 中的一个常见挑战是为具有将更改或由用户输入的内容的部分设置固定高度。设置固定高度可能会在内容太长时破坏部分。
+
+使用 `min-height` 可以解决这个问题。我们设置一个最小高度值，如果内容增长更长，部分的高度将扩展。
+
+![image-20250325222610106](/img/image-20250325222610106.png)
+
+注意内容如何垂直溢出部分。这是因为它有固定高度。
+
+```css
+section {
+  min-height: 450px;
+  /* … instead of… */
+  /* height: 450px; */
+}
+```
+
+这解决了问题。
+
+#### 为定位元素设置最小高度
+
+通常，模态组件包含诸如表单元素、文本、图像等内容。如果内容太短，模态高度会折叠，布局会看起来很糟糕。
+
+![image-20250325222632142](/img/image-20250325222632142.png)
+
+设置 `min-height` 更好，这样模态就不能低于该值。因此，我们将防止任何不需要的行为。
+
+```css
+.modal-body {
+  min-height: 250px; /* 250px is just an example. Tweak according to
+your project's needs. */
+  padding: 16px;
+}
+```
+
+### 最大高度
+
+#### 为定位元素设置最大高度
+
+让我们从这个问题开始，因为它与前面关于模态内容的问题相关。如果模态的内容太高怎么办？模态的高度将等于视口的高度，这不好。
+
+![image-20250325222737756](/img/image-20250325222737756.png)
+
+所以，我们不仅应该使用 `min-height`，还应该使用 `max-height`，这样无论内容多高，它都不会超过我们设置的值。
+
+```css
+.modal-body {
+  min-height: 250px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+```
+
+不要忘记通过添加 `overflow-y: auto` 使模态可滚动。没有它，内容会超出其父元素。
+
+#### 设置基于百分比的最大高度
+
+这个也是相关的。我们以像素为单位设置最大高度，记得吗？这会起作用，但它有一个陷阱。如果视口的高度太短而 `max-height` 的值大于它怎么办？
+
+更好的解决方案是为 `max-height` 使用百分比。这样，无论内容的长度如何，模态的高度都不会超过该值。
+
+```css
+.modal-body {
+  min-height: 250px;
+  max-height: 90%;
+  overflow-y: auto;
+}
+```
+
+#### 过渡元素的高度
+
+我听到的一个常见问题是如何过渡元素的高度属性。不幸的是，该属性不可动画，因为通常我们想要将高度从 `0` 动画到 `auto`，而值 `auto` 对动画无效。可以使用 JavaScript，通过添加高度作为内联样式并递增它。
+
+这里有一个 CSS 解决方案，有点像黑客，但它有效。通过使用 `max-height`，我们可以设置最大值，它会过渡。
+
+```css
+.element {
+  max-height: 0;
+  overflow: hidden; /* This prevents child elements from appearing
+while the element's height is 0. */
+  transition: max-height 0.25s ease-out;
+}
+
+.element.is-active {
+  max-height: 200px;
+}
+```
+
+#### 最大高度取决于元素的定义高度
+
+如果元素有 `max-height: 90%`，那么它需要以下之一才能工作：
+
+- 具有明确定义 `height` 的父元素或包含块，
+- 绝对定位的元素。
+
+当你应用带有百分比值的 `max-height` 时，确保满足上述条件之一。否则，计算值将是 `none`。
+
+## 简写与完整属性
+
+如你所猜测的，简写是 CSS 属性的简短版本，完整属性是长版本。
+
+```css
+.element {
+  padding: 10px;
+}
+```
+
+这是一个简写属性。这个 `padding` 有四个值，所有值都是 `10px`。我们可以这样写四个值：
+
+```css
+.element {
+  padding: 10px 10px 10px 10px;
+}
+```
+
+但因为它们都相等，所以没有必要写出来。完整版本看起来像这样：
+
+```css
+.element {
+  padding-top: 10px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+  padding-left: 10px;
+}
+```
+
+当为元素设置背景时，它将是纯色或图像。我们必须注意如何编写它。假设我们写这个：
+
+```css
+.element {
+  background: green;
+}
+```
+
+我们会得到绿色，但实际上我们在做这个：
+
+```css
+.btn {
+  background-image: initial;
+  background-position-x: initial;
+  background-position-y: initial;
+  background-size: initial;
+  background-repeat-x: initial;
+  background-repeat-y: initial;
+  ... and so on ...
+  background-color: green;
+}
+```
+
+因为 `background` 是简写属性，当添加时它会将所有其他背景属性**重置**为其初始值。这会给你的布局引入一些令人困惑的错误。在这种情况下使用完整属性。
+
+使用 `margin` 时我多次遇到类似情况。
+
+```css
+.wrapper {
+  margin: 0 auto;
+}
+```
+
+如果我们之前为包装器定义了 `margin-top` 和 `margin-bottom` 怎么办？我们的新 CSS 声明会将它们重置为 `0`。相信我，当你工作了一整天并犯了这样的错误时，你可能会花一个小时才意识到为什么会发生这种情况。只有在需要时才使用简写属性，正如 [CSS Wizardy 建议的](https://csswizardry.com/2016/12/css-shorthand-syntax-considered-an-anti-pattern/)。这里是一个正确的用法：
+
+```css
+.button {
+  padding: 10px 12px 15px 10px;
+}
+```
+
+我们可能会以这种方式为按钮设置 `padding`，因为它有一个奇怪的字体导致一些对齐问题。
+
+## 定位
+
+CSS 定位问题通常发生是因为不正确使用 position 属性，无论是因为作者没有完全理解它还是因为普通的旧错误。
+
+### 使用定位偏移属性
+
+当使用 `top`、`right`、`bottom` 或 `left` 属性之一时，确保位置不是 `static`（默认值）。如果是，那么 `offset` 属性对元素不会有任何效果。
+
+### 图标对齐
+
+有时，将图标与其旁边的文本对齐是一个挑战。即使使用像 `vertical-align` 和 `flexbox` 这样的属性，它仍然不容易。这种问题的原因各不相同，但最令人恼火的原因是有一个在其字符上方和下方有空间的字体。在这种情况下，使用 `position` 是一个好的解决方案。
+
+![image-20250325222910743](/img/image-20250325222910743.png)
+
+```css
+.icon {
+  position: relative;
+  top: 3px;
+}
+```
+
+我们将图标向底部推 3 像素。当然，我们在这里硬编码值，但在这种情况下这是有效的用法。缺点是当字体更改时，图标的对齐可能会破坏，所以要注意这一点。
+
+### 使用 `width` 和 `height` 属性
+
+我注意到为定位元素使用 `width` 或 `height` 属性的不必要模式。
+
+```css
+.element {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+```
+
+这个元素已经定位到四个边。它已经占用了全部空间，所以设置宽度和高度是不需要的。
+
+**提醒：**这不适用于 HTML 替换元素，如 `img`。如果上面的元素是大图像，那么需要宽度和高度，否则你可能会遇到水平滚动。
+
+### 内边距如何为定位元素工作
+
+定位元素可以有间距，使其从其父元素的四个边偏移。如果我们希望元素有 10 像素偏移，那么 `top`、`right`、`bottom` 和 `left` 的每个属性都应该有 `10px` 的值。
+
+涉及内边距和偏移属性有一些棘手的情况。
+
+![image-20250325223007048](/img/image-20250325223007048.png)
+
+这里我们有一个卡片，其页脚从左、右和底部边偏移 12 像素。我们如何在 CSS 中做到这一点？
+
+```css
+.card-footer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 0 12px 12px 12px;
+}
+```
+
+我们将页脚定位到四个边，我们依赖 `padding` 而不是偏移属性来获得 12 像素。这样，在测试时更容易控制。你可能需要调整 `padding` 值。
+
+### 使用 `z-index`
+
+`z-index` 属性负责设置定位元素及其后代在 z 轴上的顺序。除非位置设置为 `static` 以外的其他内容，或者元素具有触发新堆叠上下文的属性（如：`transform`、小于 1 的 `opacity` 等），否则它不起作用。我们稍后会深入了解。
+
+### 重置位置
+
+将元素的位置从 `absolute` 或 `fixed` 重置为另一个值可能会令人困惑。例如，如果我们有一个只应在移动设备上为 `absolute` 的元素，我们可以执行以下操作：
+
+```css
+.element {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+@media (min-width: 700px) {
+  .element {
+    position: static;
+    }
+}
+```
+
+将值设置为 `static` 将重置 `position` 的值。完成后，保留 `top`、`right`、`bottom` 和 `left` 的值是可以的，因为它们不会有任何效果。
+
+## `z-index` 属性
+
+`z-index` 属性使我们能够使用数值控制 HTML 元素如何彼此定位在顶部。起初，可能看起来将元素定位在其兄弟元素或父元素之上就像将 `z-index` 设置为 `999999` 一样简单。情况并非总是如此——`z-index` 有某些规则要遵循。让我们探索它的最常见问题。
+
+### 忘记设置位置
+
+`z-index` 属性不会与位置的默认值 `static` 一起工作。值必须是 `relative`、`absolute`、`fixed` 或 `sticky`。确保设置位置或仔细检查堆叠上下文是否存在。
+
+### 默认堆叠顺序
+
+在 HTML 中，位于容器底部的元素将定位在前面的元素之上。
+
+```html
+<div class="home">
+  <!-- ::before element -->
+  <div class="floor"></div>
+  <div class="desk"></div>
+  <div class="laptop"></div>
+  <!-- ::after element -->
+</div>
+```
+
+![image-20250325223056413](/img/image-20250325223056413.png)
+
+希望这个现实生活的例子使它更清楚。笔记本电脑在桌子上，桌子在地板上。也就是说，默认情况下，最后一个子元素将定位在其兄弟元素之上。不理解这一点，事情可能会变得令人困惑。
+
+伪元素也是如此。在 HTML 标记中，注意 `::before` 和 `::after` 伪元素如何添加到 `.home` 元素。`::after` 元素将默认在布局中出现在顶部，`::before` 元素将在正常堆叠上下文中出现在其他所有内容下面。
+
+### 创建堆叠上下文的 CSS 属性
+
+一些属性会触发新的堆叠上下文。CSS 规范列出了触发堆叠上下文的属性。它们包括除 `static` 以外的位置值、`opacity`、`transform`、`filter`、`perspective`、`clip-path`、`mask` 和 `isolation`。
+
+```html
+<div class="elem-1"></div>
+<div class="elem-2"></div>
+```
+
+```css
+.elem-1 {
+  position: absolute;
+  left: 10px;
+  top: 20px;
+}
+
+.elem-2 {
+  opacity: 0.99;
+}
+```
+
+哪个元素会出现在另一个之上？在这种情况下，`elem-2` 会在顶部，因为添加 `opacity` 值会触发新的堆叠上下文，从而将 `elem-2` 放在 `elem-1` 之上，即使 `elem-1` 是绝对定位的。
+
+![image-20250325223127123](/img/image-20250325223127123.png)
+
+当 `z-index` 没有按预期行为时，检查是否有任何属性触发了新的堆叠上下文。
+
+### 元素无法出现在其父元素兄弟元素之上
+
+对于这个问题，让我们先从 HTML 开始，这样你可以更好地想象它。
+
+```html
+<div class="wrapper">
+  <!-- other content -->
+  <div class="modal"></div>
+</div>
+<div class="help-widget"></div>
+```
+
+```css
+.wrapper {
+  position: relative;
+  z-index: 1;
+}
+.modal {
+  position: fixed;
+  z-index: 100;
+}
+
+.help-widget {
+  position: fixed;
+  z-index: 10;
+}
+```
+
+从标记中，你能判断哪个元素会在顶部吗？很容易认为 `.modal` 元素会在顶部，因为它有更高的 `z-index`，对吧？
+
+![image-20250325223309752](/img/image-20250325223309752.png)
+
+错误。`.modal` 元素是 `.wrapper` 的子元素，而 `.help-widget` 元素是 `.wrapper` 的兄弟元素。将 `.modal` 定位在 `.help-widget` 之上是不可能的，除非我们更改标记：
+
+```html
+<div class="wrapper">
+  <!-- other content -->
+</div>
+<div class="modal"></div>
+<div class="help-widget"></div>
+```
+
+这样，我们可以将 `.modal` 定位在 `.help-widget` 之上。作为经验法则，如果你有一个元素，如模态或弹出窗口，将其保持在页面主包装器之外，以避免这种混淆。
+
+### 元素浮动在其兄弟元素之上
+
+一个棘手的情况是当元素的 `z-index` 比固定头部更高时。这个问题很容易让我们犯错，因为它不容易注意到。
+
+![image-20250325223340059](/img/image-20250325223340059.png)
+
+这些卡片在左上角有一个绝对定位的蓝色元素（它们可能表示卡片的类别）。当用户向下滚动时，类别将滚动到固定头部之上。修复这个问题很简单：你只需要设置一个适当的 `z-index` 值。
+
+## calc() 函数
+
+CSS 的 `calc()` 函数允许我们计算某些 CSS 属性的值。编写 `calc()` 的一个常见错误是省略空格。
+
+```css
+.element {
+  width: calc(100%-30px); /* 无效 */
+}
+```
+
+这个值是无效的。你必须在减法符号周围添加空格。
+
+```css
+.element {
+  width: calc(100% - 30px); /* 有效 */
+}
+```
+
+## 文本对齐
+
+### 忘记居中按钮的内容
+
+假设你想要向 HTML `button` 或作为按钮功能的 `a` 链接添加一些 CSS 类。`button` 的内容默认是居中的，但 `a` 元素不是。所以，你应该手动居中后者。
+
+![image-20250325223409012](/img/image-20250325223409012.png)
+
+```html
+<button class="button" type="submit">Submit</button>
+<a class="button" href="/debugging-css">Read more</a>
+```
+
+```css
+.button {
+  /* Other styles */
+  text-align: center;
+}
+```
+
+如果不这样做，你可能会惊讶地发现网站上的一些按钮是左对齐的！
+
+## 视口单位
+
+### 使用 height: `100vh` 是有风险的
+
+当你向类名为hero的元素添加 height: `100vh` 时，其中的元素在视口足够高时可能看起来很好。我曾经在 15 英寸笔记本电脑上浏览某人的网站。英雄部分占用了视口高度的 `100%`。它看起来很棒！
+
+我很好奇，打开了 DevTools 看看它是如何构建的，然后——砰！——英雄部分破坏了。其中的元素与下一个部分重叠。一旦我打开 DevTools，英雄部分中的元素就不适合可用高度了。为什么？这是因为当使用 `100vh` 时，缩小浏览器的高度会减少高度。
+
+![image-20250325223431349](/img/image-20250325223431349.png)
+
+说到这里，当你测试视口高度时，DevTools 可能会很烦人。在调试视口高度时，我通常将 DevTools 解锁到单独的窗口。
+
+## 伪元素
+
+CSS 伪元素是 CSS 最有用的补充之一。误用它们可能会令人困惑，所以让我们探索一些常见问题。
+
+### 忘记 `content` 属性
+
+伪元素的核心是 `content` 属性。我们经常忘记它并设置以下内容：
+
+```css
+.element::before {
+  display: block;
+  background: #ccc;
+}
+```
+
+然后，我们想知道为什么元素没有出现。我花了一些时间修复这样的错误。为了避免这种情况，确保在创建伪元素时，`content` 属性是你添加的第一件事，然后再急于添加其他属性。
+
+### 使用宽度或高度
+
+伪元素的默认 `display` 值是 `inline`。所以，当你添加宽度、高度、垂直内边距或垂直边距时，除非显示类型更改为 `inline` 以外的值，否则它不会起作用。
+
+```css
+.element::before {
+  content: '';
+  background: #ccc;
+  width: 100px;
+  height: 100px; /* 宽度和高度都不会起作用。 */
+}
+```
+
+### 在 Grid 或 Flexbox 中使用伪元素
+
+当你向容器应用 `display: flex` 或 `display: grid` 时，其中的任何伪元素都将被视为普通元素。这可能会令人困惑，并可能导致意外问题。
+
+我记得的一个常见问题是在 Bootstrap 3 中向 `.row` 元素应用 `display: flex`。因为列是用 float 属性构建的，`.row` 元素有 `::before` 和 `::after` 伪元素：
+
+```css
+.row::before,
+.row::after {
+  content: '';
+  display: table;
+}
+```
+
+这是"clearfix"技巧，它修复了浮动元素的布局，而无需添加表现性标记。
+
+当 flexbox 应用于 `.row` 元素时，两个伪元素将被视为普通元素，这可能在布局中创建一些奇怪的空间。在这种情况下，伪元素不会有任何好处，所以它们应该被隐藏。
+
+```css
+.row::before,
+.row::after {
+  display: none;
+}
+```
+
+### 何时使用 `::before` 和何时使用 `::after`
+
+`::before` 伪元素成为其父元素的第一个子元素，而 `::after` 作为最后一个子元素添加。你可能想知道这是否有用？
+
+这是伪元素的一个常见用例，即在卡片组件顶部绝对定位覆盖层。在这种情况下，使用 `::before` 还是 `::after` 很重要，因为其中一个会更容易处理。你能猜到是哪个吗？考虑以下示例：
+
+![image-20250325223609237](/img/image-20250325223609237.png)
+
+```html
+<article class="card">
+  <img src="article.jpg" alt="" />
+  <h2>Title here</h2>
+</article>
+```
+
+我们需要添加渐变覆盖层以使文本易于阅读。绝对定位元素（标题和 `::after` 元素）的堆叠顺序从下到上开始。最底部的元素 `h2` 将出现在图像顶部。如果我们使用 `::after` 作为渐变覆盖层，它将是最后一个元素，这将把它放在所有内容之上，所以我们需要使用 `z-index: -1` 将其移动到标题下方。
+
+但是，如果我们使用 `::before`，那么渐变默认会出现在标题下方，无需对 `z-index` 进行任何调整。因此，我们节省了额外的工作并避免了错误。
+
+```css
+.card::before {
+  content: '';
+  /* The CSS for the gradient overlay */
+}
+```
+
+## 颜色
+
+`color` 属性在 CSS 中是一个重要属性，因为它设置文本元素的颜色。这可能听起来很简单，但事实并非如此。错误使用它可能会导致问题和额外的工作。
+
+### `transparent` 关键字
+
+`transparent` 关键字是 `rgba(0, 0, 0, 0)` 的快捷方式。一些浏览器将其计算为 alpha 值为 `0` 的黑色。这可能使透明渐变看起来有点黑色。
+
+![image-20250325223653917](/img/image-20250325223653917.png)
+
+这种行为在 Chrome 和 Safari 等浏览器的旧版本中出现。为了防止这种情况，避免使用 `transparent` 关键字，特别是在 CSS 渐变中。为了解决这个问题，建议使用以下内容：
+
+```css
+.element {
+  background: linear-gradient(to top, #fff, rgba(0, 0, 0, 0));
+}
+```
+
+### 不利用级联
+
+默认情况下，`color` 属性被诸如 `p` 和 `span` 之类的子元素继承。与其在每个元素上设置 `color` 属性，不如将其添加到 `body` 元素，然后所有 `p` 和 `span` 元素都将继承该颜色，除非你覆盖它。
+
+```css
+body {
+  color: #222; /* 所有元素都将继承这个颜色。 */
+}
+```
+
+但是，`a` 元素默认不继承颜色。你可以覆盖其颜色或使用 `inherit` 关键字。
+
+```css
+a {
+  color: #222; /* … 或者… */
+  color: inherit;
+}
+```
+
+我认为开发者不利用级联是一个错误，因为它非常重要。为什么要添加比你需要的更多的 CSS？
+
+### 忘记哈希标记
+
+颜色十六进制值前面的井号标记很重要。我经常从设计应用程序（如 Adobe Experience Design (XD) 或 Sketch）复制和粘贴颜色。从 Sketch 复制时，颜色被复制为 `275ED5`，而 Adobe XD 添加井号：`#275ED5`。如果你不是 100% 专注，这种差异可能导致意外结果。
+
+```css
+a {
+  color: 275ed5; /* 忘记哈希标记 */
+  color: ##275ed5; /* 双哈希标记 */
+}
+```
+
+注意第二个规则中哈希标记错误地重复了。在项目工作时，你可能粘贴带有哈希标记的颜色值，然后，在另一个应用程序中编辑颜色后，你可能双击值（包括哈希标记）并盲目地将其粘贴回 CSS 中，导致双哈希标记。
+
+![image-20250325223809698](/img/image-20250325223809698.png)
+
+当然，使用样式检查器可以避免这样的问题。但是，训练自己在复制和粘贴内容到代码编辑器时保持警惕很重要。
+
+## CSS Backgrounds
+
+CSS 中的背景通常用于添加背景颜色、添加图像或用于装饰。让我们探索一些与它们相关的问题。
+
+### 背景大小和位置的顺序
+
+在 `background` 属性的简写中，写出背景大小和位置可能会令人困惑。它们有特定的顺序，用斜杠分隔。如果顺序错误，`background` 的整个定义将变为无效。
+
+根据 Mozilla Developer Network (MDN)：
+
+> `<bg-size>` 值只能紧跟在 `<position>` 之后，
+> 用 '/' 字符分隔，像这样："center/80%"。
+
+```css
+background: url('image.png') center/50px 80px no-repeat;
+```
+
+注意 `center/50px 80px`。第一个是 `background-size`，第二个是 `position`。顺序不能颠倒。斜杠周围的空格是可以的。
+
+### 不要使用简写仅设置颜色
+
+使用 `background` 的简写来添加背景颜色可能很诱人，但不建议这样做，因为这会重置所有其他与背景相关的属性。
+
+### 动态背景
+
+如果背景是用 JavaScript 设置的，请使用 `background-size`、`position` 和 `repeat` 的专用属性。`background-image` 是唯一需要用 JavaScript 动态设置的属性。如果你用 JavaScript 设置整个背景，那将是很多不必要的工作。
+
+### 忘记 `background-repeat`
+
+设置背景时，我们很容易忘记 `background-repeat`。例如，部分的背景在 15 英寸笔记本电脑上可能看起来很好，但在 27 英寸桌面上可能会重复。记住指定背景是否应该重复。
+
+```css
+.element {
+  background: url('image.png') cover/center no-repeat;
+}
+```
+
+一般来说，我建议结合使用完整属性和简写属性。见下文：
+
+```css
+.element {
+  background: url('image.png') center no-repeat;
+  background-size: cover;
+}
+```
+
+### 打印 CSS 和背景
+
+CSS 背景默认不包含在打印中。我们可以覆盖该行为并强制背景包含在打印中，使用以下 CSS 属性：
+
+```css
+.element {
+  background: url('cheesecake.png') center/cover no-repeat;
+  -webkit-print-color-adjust: exact; /* 强制浏览器在打印模式下渲染背景 */
+}
+```
+
+## CSS 选择器
+
+定位和样式化 HTML 元素是 Web 开发者的核心技能。如果我们不学会如何正确使用 CSS 选择器，我们会遇到错误。
+
+### 忘记类的点标记
+
+通过类名选择元素在没有点标记的情况下不会起作用。这通常发生在我们不专注的时候。
+
+```css
+button-primary {
+  /* 样式不会起作用。 */
+}
+```
+
+### 分组选择器
+
+这是一个有趣的错误，你可能不会想到它。将有效和无效选择器分组在一起可能导致整个声明被忽略。
+
+```css
+a,
+..button-primary {
+}
+```
+
+根据 [CSS 规范](https://www.w3.org/TR/selectors/#grouping)：
+
+> 如果这些选择器中只有一个无效，整个选择器列表就会无效。
+
+`..button-primary` 类有两个点标记，这使其无效。将其与 `a` 元素分组会使浏览器忽略整个声明。
+
+在选择 `::selection` 伪元素（用于定位选定文本）或 `::placeholder` 伪元素（用于定位输入占位符）时，很容易犯这个错误。我们在供应商前缀选择器中也看到这种情况，用于跨浏览器支持；当组中的一个供应商前缀选择器不正确时，整个样式声明将被忽略。
+
+### 多次调用 CSS 选择器
+
+CSS 特异性的一个常见错误是多次调用选择器。
+
+```css
+.title {
+  /* Some styles */
+}
+/* 300 lines and.. */
+.title {
+  /* Another style */
+}
+```
+
+这本身不是错误，但很容易为错误开路。避免这种模式，并使用警告此类事情的样式检查器。
+
+### 自定义输入的占位符
+
+Firefox 使输入元素的占位符文本半透明。为占位符文本设置自定义颜色时，请记住它会显得有点暗淡。这对可访问性不好。确保通过重置半透明度来修复：
+
+```css
+::-webkit-input-placeholder {
+  color: #222;
+  opacity: 1;
+}
+::-moz-placeholder {
+  color: #222;
+  opacity: 1;
+}
+:-ms-input-placeholder {
+  color: #222;
+  opacity: 1;
+}
+```
+
+### 用户操作伪类的顺序
+
+`:visited`、`:focus`、`:hover` 和 `:active` 伪类的顺序很重要。如果它们不按以下方式出现，那么它们不会按预期工作：
+
+```css
+a:visited {
+  color: pink;
+}
+a:focus {
+  outline: solid 1px dotted;
+}
+a:hover {
+  background: grey;
+}
+a:active {
+  background: darkgrey;
+}
+```
+
+### 定位具有多个类的元素
+
+我在初学者中看到的一个常见错误是错误地同时定位两个类以选择元素。考虑以下内容：
+
+```html
+<div class="alert success"></div>
+<div class="alert danger"></div>
+```
+
+```css
+.alert.success {
+  background-color: green;
+}
+.alert.danger {
+  background-color: red;
+}
+```
+
+第一个样式将与同时具有 `.alert` 和 `.success` 类的元素一起工作，而第二个样式只与同时具有 `.alert` 和 `.danger` 类的元素一起工作。但是，假设我们做了以下事情：
+
+```css
+.alert .success {
+  background-color: green;
+}
+```
+
+这里的错误是**在两个类之间添加空格**。这个空格改变了整个事情，它不会起作用。我们基本上是在选择 `.alert` 类元素内部具有 `.success` 类的元素。它假设如下的 HTML 结构：
+
+```html
+<div class="alert">
+  <div class="success"></div>
+</div>
+```
+
+使用正确的选择器，否则你可能会浪费很多时间想知道为什么它不起作用。
+
+### 在特定元素上定位类
+
+网站对所有用户的可访问性是网站设计的核心原则。忽视它可能导致糟糕的结果。我们看到的一个常见问题是使用 `div` 元素作为按钮，并仅通过 JavaScript 使其可点击。
+
+防止与你合作的开发者向任何元素添加类并称其为按钮的一种方法是将类与其元素一起定位。
+
+```css
+button.btn {
+}
+```
+
+这样，`.btn` 类除了在 button 元素上不会在任何元素上起作用。这是将类的使用限制为实际按钮元素的好方法。
+
+### `!important` 的替代方案
+
+有时，样式不起作用，因为它被 CSS 文件中的另一个样式覆盖。不建议使用 `!important`。这是一个更好的方法，仅使用 CSS 类。
+
+```css
+.btn.btn {
+}
+```
+
+调用类两次会增加选择器的**特异性**，从而使规则在没有 `!important` 的情况下工作。确保类之间没有空格。注意你可以调用它三次、四次或任意多次。
+
+## CSS 边框
+
+### 悬停时的边框
+
+显示悬停边框的一个常见错误是仅在悬停时添加边框。如果边框是 1 像素，那么当用户悬停在元素上时，元素会跳动。为了避免跳动，在正常状态下添加透明颜色的边框。
+
+```css
+.nav-item {
+  border: 2px solid rgba(0, 0, 0, 0);
+}
+.nav-item:hover {
+  border-color: #222;
+}
+```
+
+这样，边框已经被添加并保留空间，悬停时边框的出现将基于 `border-color`。
+
+我们经常在内联导航菜单中看到这种情况，其中项目应该在悬停时有边框。注意图中元素在导航项目悬停时如何稍微向右推。
+
+### 多重边框
+
+当你向元素添加多个 CSS 边框时——例如，左边和底边的边框——你可能会注意到两个边框相交的点有点奇怪。左边框的底端和底边框的左端看起来像被切断的三角形。
+
+![image-20250325224211829](/img/image-20250325224211829.png)
+
+这是正常和预期的。CSS 边框就是这样工作的。如果你想要多重边框，那么你可以结合边框和阴影来解决问题。左边框可以保持原样，底边框可以是阴影。
+
+### 边框和 `currentColor` 关键字
+
+这不一定是错误，但值得一提。`currentColor` 关键字是 `border-color` 的默认值。
+
+```css
+.element {
+  color: #222;
+  border: 2px solid;
+}
+```
+
+注意边框规则中没有声明颜色。默认值是 `currentColor`，它从 `color` 属性继承其值。我们的示例可以写成如下：
+
+```css
+.element {
+  color: #222;
+  border: 2px solid currentColor;
+}
+```
+
+重点是当边框规则与 `color` 的值相同时，向边框规则添加颜色是**不必要的**。
+
+### 悬停时的边框过渡
+
+有很多方法可以用 CSS 过渡边框。一种常见方法是修改 `border-width`。假设我们有两个按钮：
+
+![image-20250325224307413](/img/image-20250325224307413.png)
+
+我们想要扩展第一个按钮的边框，所以我们使用 `border-width`。悬停在按钮上会因为扩展的边框宽度而移动另一个按钮的位置。这种方法有两个主要问题：
+
+- 过渡很慢。也就是说，浏览器不会平滑地动画宽度。而不是像 `1, 1.1, 1.2 … 3` 那样增加，它会像 `1, 2, 3` 那样增加。这是阶梯动画。
+- 对性能也不好。`border-width` 的更改会触发浏览器中布局的重绘。兄弟按钮会因为新的边框宽度而移动。在动画的每一帧中，浏览器都会重绘它们的位置。
+
+首选解决方案是使用 `box-shadow`。阴影更容易过渡，性能也足够好。
+
+假设我们想要将元素边框的底部宽度从 3 像素动画到 6 像素。为此，我们可以使用 `box-shadow`，使用其 `y` 值作为 `border-width` 的替代。
+
+```css
+:root {
+  --shadow-y: 3px;
+}
+.element {
+  box-shadow: 0 var(--shadow-y) 0 0 #222;
+  transition: box-shadow 0.3s ease-out;
+}
+.element:hover {
+  --shadow-y: 6px;
+}
+```
+
+进一步，我定义了一个 CSS 变量来保存阴影的 `y` 值，并在悬停时更改它。使用 CSS 变量，而不是再次复制整个 `box-shadow` 规则，减少了代码中的冗余。
+
+### 基于屏幕尺寸更改边框宽度
+
+适用于笔记本电脑或桌面屏幕的 `border-width` 对于移动设备可能太大。通常，我们会使用媒体查询在特定屏幕尺寸下更改 `border-width`。虽然这有效，但使用当前可用的 CSS 工具，我们有更好的替代方案。
+
+![image-20250325224347114](/img/image-20250325224347114.png)
+
+通过使用 CSS 的比较函数，我们可以创建响应屏幕尺寸的阴影，而无需使用媒体查询。
+
+```css
+.element {
+  border: min(1vw, 10px) solid #468eef;
+}
+```
+
+`border-width` 的最大值将是 10 像素，随着屏幕变窄它会变小。
+
+### 向文本内容添加边框
+
+当我开始学习 CSS 时，我认为可以向文本添加边框。事实并非如此。这可能会让任何 CSS 新手感到困惑。但是，使用 `text-stroke` 或 `text-shadow` 属性是可以做到的。让我们探索两种解决方案。
+
+![image-20250325224406957](/img/image-20250325224406957.png)
+
+最常见的解决方案是将 `color` 设置为 `transparent`，然后添加边框。
+
+```css
+.element {
+  color: transparent;
+  -webkit-text-stroke: 1px #000;
+}
+```
+
+虽然这有效，但在不支持的浏览器中（如 Internet Explorer 和旧版本的 Chrome、Firefox 和 Safari），文本将无法访问。
+
+我们可以使用 CSS 的 `@supports` 查询来检测是否支持 `-webkit-text-stroke`，如果支持，则使用它。
+
+```css
+@supports (-webkit-text-stroke: 1px black) {
+  .element {
+    color: transparent;
+    -webkit-text-stroke: 1px #222;
+  }
+}
+```
+
+另外，我们可以用其他东西替换 `color: transparent`。
+
+```css
+@supports (-webkit-text-stroke: 1px black) {
+  .element {
+    -webkit-text-fill-color: #fff;
+    -webkit-text-stroke: 1px #222;
+  }
+}
+```
+
+### `border: none` vs. `border: 0`
+
+`border: none` 和 `border: 0` 都会将边框重置为其初始状态。它将 `border-width` 重置为 `0px`，`border-style` 重置为 `none`，`border-color` 将从 `color` 属性继承其值。
+
+我更喜欢使用 `border: 0`。但是，如果我们看另一个属性，如 `box-shadow`，将其重置为 `box-shadow: 0` 是无效的。这令人困惑，因为你会期望 `0` 会重置这两个属性。但是 `none` 关键字对两者都有效。我建议使用它而不是 `0`。
+
+### Focus 轮廓
+
+这与 `border` 属性没有直接关系，但很容易混淆 `border` 和 `outline`。例如，在 StackOverflow 上快速搜索"css border"会返回几个标题包含"focus border, blue border"的问题。所以，我决定在这里涵盖它。
+
+当元素获得焦点时出现的蓝色边框或轮廓不是错误，而是帮助键盘用户知道他们在哪里、采取行动等的功能。其实现在浏览器中不一致。
+
+![image-20250325224538472](/img/image-20250325224538472.png)
+
+我们可以用自定义轮廓覆盖该轮廓，而不是删除它。
+
+```css
+.nav-item a:focus {
+  outline: dotted 2px blue;
+}
+```
+
+可能性是无穷的。但请在任何情况下都不要删除该轮廓，因为它会影响网站的可访问性。
+
+## 盒子阴影
+
+### 元素一侧的阴影
+
+当你在 CSS 中添加阴影时，默认情况下它会从元素的四个边扩散。我在研究中看到一个常见请求，即如何在一个方向添加阴影。
+
+![image-20250325224628148](/img/image-20250325224628148.png)
+
+使用 `box-shadow`，扩散值控制阴影覆盖区域的大小。通过使用负值，我们可以向元素的一个方向添加阴影。
+
+```css
+.element {
+  /* -5px 的值是阴影的扩散。 */
+  box-shadow: 0 7px 7px -5px #ccc;
+}
+```
+
+### `box-shadow` 和 `overflow: hidden` 不能很好地混合
+
+如果你需要为元素使用 `overflow`，并且其一些子元素有 `box-shadow` 属性，阴影将在左右两侧被切断。
+
+![image-20250325224651905](/img/image-20250325224651905.png)
+
+在这个例子中，缩略图的阴影在左右两侧被切断。原因是 `overflow: hidden` 被应用于父元素（卡片）。当你希望子元素上的阴影可见时，避免使用 `overflow: hidden`。
+
+### 多重盒子阴影
+
+有时我们需要向元素添加多个阴影。这是支持的，可以在没有额外 HTML 元素或伪元素的情况下完成。每个阴影都用逗号分隔。
+
+```css
+.element {
+  box-shadow:
+    0 5px 10px 0 #ccc,
+    0 10px 20px #222;
+}
+```
+
+### 盒子阴影和内联图像的空白问题
+
+你还记得我们谈论图像的 `display` 以及图像下方如何有一点空白吗？原因是它是一个内联元素。当我们对内联图像的父元素使用 `box-shadow` 时也会发生这种情况。
+
+```html
+<div class="img-wrapper">
+  <img src="ahmad.jpg" alt="" />
+</div>
+```
+
+```css
+.img-wrapper {
+  box-shadow: 0 5px 10px 0 #ccc;
+}
+```
+
+![image-20250325224718890](/img/image-20250325224718890.png)
+
+在这个例子中，图像下方有空白，只有在添加阴影后才变得可见。确保重置图像的 `display` 值以避免这个问题。
+
+### 头部元素的盒子阴影
+
+当网站的头部直接跟随，比如说，英雄图像时，添加阴影可能会很棘手。如果你尝试向头部添加阴影，它会被英雄部分覆盖。
+
+![image-20250325224740951](/img/image-20250325224740951.png)
+
+解决这个问题可以通过更改头部元素的堆叠上下文来完成。最简单的解决方案是添加以下内容：
+
+```css
+.site-header {
+  position: relative;
+}
+```
+
+确保这个修复没有意外的副作用。
+
+### 语音气泡箭头的阴影
+
+工具提示和下拉菜单的常见设计模式是添加指向工具提示或下拉菜单父元素的箭头。在 CSS 中制作箭头有很多方法，最常见的是创建一个在一侧有边框的伪元素。
+
+![image-20250325224801169](/img/image-20250325224801169.png)
+
+我们如何向箭头添加 `box-shadow`？我们可以通过对 x 和 y 值使用负值来模拟来自一个方向的阴影。
+
+```css
+.element::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: -1px -1px 1px 0 lightgray;
+}
+```
+
+### 图像元素的 `inset` 阴影
+
+假设我们有一个图像，我们想要向其添加半透明的内边框，作为后备，以防图像加载失败。
+
+![image-20250325224822446](/img/image-20250325224822446.png)
+
+边框也有助于防止明亮的图像与浅色背景融合。你可能想到的第一个解决方案是使用内嵌 `box-shadow`：
+
+```css
+img {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+```
+
+不幸的是，内嵌盒子阴影对图像不起作用。我们需要一个解决方法。我在分析 [facebook.com 的新设计](https://ishadeed.com/article/new-facebook-css/) 时学到了一些解决方案，我们将在下面探索。
+
+#### 使用额外的 HTML 元素作为边框
+
+使用额外的元素，我们会保持其背景透明并仅添加边框。以下显示了 HTML 的结构和 CSS：
+
+```html
+<div class="avatar-wrapper">
+  <img class="avatar" width="40" height="40" src="avatar.jpg" width="40" alt="" />
+  <div class="avatar-outline"></div>
+</div>
+```
+
+```css
+.avatar-wrapper {
+  position: relative;
+}
+.avatar {
+  display: block;
+  border-radius: 50%;
+}
+.avatar-outline {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+}
+```
+
+#### 使用 SVG `image`
+
+另一个有趣的解决方案是使用 `svg` 元素，而不是 `img`。这个解决方案在浏览器中得到很好的支持，并且更容易控制。这是 HTML：
+
+```html
+<svg role="none" style="height: 100px; width: 100px;">
+  <mask id="circle">
+    <circle cx="50" cy="50" fill="white" r="50"></circle>
+  </mask>
+  <g mask="url(#circle)">
+    <image
+      x="0"
+      y="0"
+      height="100%"
+      preserveAspectRatio="xMidYMid slice"
+      width="100%"
+      xlink:href="shadeed.jpg"
+      style="height: 100px; width: 100px;"
+    ></image>
+    <circle class="border" cx="50" cy="50" r="50"></circle>
+  </g>
+</svg>
+```
+
+让我们回顾一下 SVG 代码：
+
+1. 我们有一个作为圆形的 `mask` 元素。
+2. 接下来是一个 `group`，包含 `image` 本身和一个 `circle` 元素。`circle` 元素充当边框，它将位于 `image` 之上。
+
+```css
+.border {
+  stroke-width: 2;
+  stroke: rgba(0, 0, 0, 0.1);
+  fill: none;
+}
+```
+
+Facebook 在其 2020 年重新设计中使用了这两种解决方案。SVG 解决方案很少用于侧边栏中的个人资料图片和用户头像等内容。带有额外 HTML 元素的解决方案在社交动态、评论等中大量使用。
+
+## CSS 变换
+
+### 应用多个变换
+
+在 CSS 变换中，我们可以在元素上使用一个或多个变换。例如，可以将元素向右移动 10 像素然后旋转它。
+
+```css
+.element {
+  transform: translateX(10px) rotate(20deg);
+}
+```
+
+偶尔，你可能需要在元素上使用多个变换。
+
+但是，有时你需要在移动设备上使用一个变换，在桌面上使用两个。在这里，我们遇到了一个常见问题。
+
+假设我们有一个模态，应该在移动设备上水平居中。在较大的视口中，它应该水平和垂直居中。一个常见错误是意外重置变换。
+
+```css
+.modal-body {
+  transform: translateX(-50%);
+}
+@media (min-width: 800px) {
+  .modal-body {
+    transform: translate(0, -50%);
+  }
+}
+```
+
+变换通过 `translate(0, -50%)` 得到意外重置。这很容易造成混淆。解决方案很简单：我们需要保持 `translateX(-50%)`。
+
+```css
+@media (min-width: 800px) {
+  .modal-body {
+    transform: translate(-50%, -50%);
+  }
+}
+```
+
+### CSS 变换的顺序很重要
+
+根据 MDN：
+
+> 变换函数从左到右相乘，这意味着复合变换实际上从右到左按顺序应用。
+
+变换函数的顺序很重要。注意它们以避免问题。
+
+![image-20250325225012217](/img/image-20250325225012217.png)
+
+注意变换函数的顺序如何影响每个矩形的视觉位置。在第一个中，元素首先被缩放，然后向右变换 20 像素。第二个矩形发生相反的情况。调试 CSS 变换时，确保顺序满足你的需求。不要随机添加变换函数。
+
+### 错误地覆盖变换
+
+当我开始学习 CSS 时，我并不完全意识到 `transform` CSS 属性可以包含多个变换，并且我们需要在每次声明属性时指定我们想要的所有变换。以下是一个错误：
+
+```css
+.element {
+  transform: translateY(100px);
+}
+.element:hover {
+  transform: rotate(45deg);
+}
+```
+
+你可能期望 `translateY` 和 `rotate` 函数都会工作，但事实并非如此。第二个变换会覆盖第一个；因此，我们会失去 `translateY`。相反，我们会组合它们：
+
+```css
+.element:hover {
+  transform: translateY(100px) rotate(45deg);
+}
+```
+
+并记住顺序的重要性，如前所述。
+
+### 单独的变换属性
+
+在撰写本文时，只有 Firefox 72 支持单独声明的变换。这将很好地解决上面提到的问题，因为我们不必将所有变换组合在一起。这是前面示例的重新工作版本：
+
+```css
+.element {
+  translate: 0 100px;
+}
+.element:hover {
+  rotate: 45deg;
+}
+```
+
+这不是更简单吗？你可以使用 `@supports` 媒体查询检测是否支持这个。
+
+```css
+@supports (translate: 10px 10px) {
+  /* Add the individual transform properties */
+}
+```
+
+### 变换 SVG 元素
+
+HTML 元素的坐标系从 `50% 50%` 开始。在 SVG 中，它完全不同；它从 `0 0` 开始。由于这种差异，在 SVG 元素上使用 CSS 变换可能会令人困惑。
+
+要按预期变换 SVG 元素，请使用像素值并避免百分比。并记住 CSS 变换在 Internet Explorer 中不受支持，但从 Microsoft Edge 17 开始受支持。
+
+取自 [Ana Tudor on CSS-Tricks](https://css-tricks.com/transforms-on-svg-elements/)，以下示例说明了这个问题：
+
+```css
+rect {
+  /* This doesn't work in Internet Explorer and old versions of Edge. */
+  transform: translate(295px, 115px);
+}
+```
+
+```html
+<!-- This works everywhere. -->
+<rect width="150" height="80" transform="translate(295 115)" />
+```
+
+我们可以为 SVG 子元素使用内联 `transform` 属性。它与 CSS 变换有点不同，值之间没有逗号。
+
+### 使用变换将文本旋转 90 度
+
+我不会认为这是一个错误，而是寻找更好方法来解决这个需求的问题。假设我们想要旋转一个文本元素。
+
+![image-20250325225108895](/img/image-20250325225108895.png)
+
+你可能考虑的第一种方法是定位文本并旋转它。虽然这会起作用，但有更好的解决方案。通过使用 CSS 的 `writing-mode`，我们可以轻松地将书写方向从从左到右更改为从上到下。`writing-mode` 属性设置文本元素的方向（水平或垂直）。它是为日语和中文等语言设计的。
+
+```css
+/* Without writing-mode */
+.title {
+  position: absolute;
+  left: 40px;
+  transform-origin: left top;
+  transform: rotate(90deg);
+}
+/* With writing-mode */
+.title {
+  writing-mode: vertical-lr;
+}
+```
+
+使用 `writing-mode`，我们可以用一行 CSS 旋转标题。[浏览器支持](https://caniuse.com/css-writing-mode) 也很好。
+
+## CSS 自定义属性（变量）
+
+### 作用域变量 vs. 全局变量
+
+作用域变量是只能在元素内部使用的变量，而全局变量，顾名思义，可以全局使用。
+
+```html
+<div class="header">
+  <div class="item"></div>
+</div>
+```
+
+```css
+.header {
+  --brand-color: #222;
+}
+```
+
+我们定义了一个变量 `--brand-color`，它只能与 `.header` 元素及其子项目一起工作。具有 `.item` 类的元素可以看到该变量。
+
+在研究这个主题时，我注意到 StackOverflow 上有一个被标记为正确的问题，但实际上并不正确。答案声称以下应该工作：
+
+```css
+.header {
+  --brand-color: #222;
+}
+body {
+  background-color: var(--brand-color);
+}
+```
+
+这永远不会工作。`body` 元素看不到 CSS 变量，因为它的作用域是 `.header` 元素。为了使其工作，CSS 变量必须**全局**定义：
+
+```css
+:root {
+  --brand-color: #222;
+}
+body {
+  background-color: var(--brand-color);
+}
+```
+
+这完美地工作。
+
+### 为变量设置兜底值
+
+有时在谈论变量的兜底值时，可能会混淆我们是指不支持 CSS 变量的旧浏览器的兜底值，还是 CSS 变量本身的兜底值。
+
+```css
+.title {
+  color: #222;
+  color: var(--brand-color);
+}
+```
+
+上面的第一个规则是旧浏览器的兜底值，可以使用 PostCSS 等工具自动化。
+
+但是，我们这里的重点是 CSS 变量本身的兜底值：
+
+```css
+.title {
+  color: var(--brand-color, #222);
+}
+```
+
+如果由于某种原因，变量 `--brand-color` 不可用，那么逗号后的值将被使用。注意你可以使用多个兜底值。见下文：
+
+```css
+.title {
+  color: var(--brand-color, var(--secondary-color, #222));
+}
+```
+
+### 检索文档中定义的所有 CSS 变量
+
+有时，你可能想要查看应用程序或网站中的所有全局 CSS 变量。幸运的是，我们可以从浏览器的 DevTools 中获取它们。
+
+选择 `html` 元素，在右侧，你应该看到其中定义的所有 CSS 变量。
+
+![image-20250325225200821](/img/image-20250325225200821.png)
+
+该图突出显示了当我们检查页面的根元素（`html` 元素）时 CSS 变量的外观。我喜欢 Firefox 的是你可以切换变量！这对于调试或测试 CSS 变量的后备值非常有用。
+
+### 计算值时的无效化
+
+如果声明使用有效的自定义属性，但在替换 `var()` 函数后，属性值无效，则声明在计算值时将无效。当这种情况发生时，属性计算为其初始值。考虑以下示例，取自 [Lea Verou 的](https://lea.verou.me/blog/2020/06/hybrid-positioning-with-css-variables-and-max/) 博客：
+
+```css
+#toc {
+  position: fixed;
+  top: 11em;
+  top: max(0em, 11rem - var(--scrolltop) * 1px);
+}
+```
+
+如果浏览器不支持 `max()` 比较函数，它将使属性在计算值时无效，这将计算为 `initial`；对于 `top` 属性，初始值将是 0。这将破坏设计。解决方法是使用 `@supports` 函数检测对 `max()` 函数的支持。如果支持，则将使用声明。
+
+```css
+#toc {
+  position: fixed;
+  top: 11em;
+}
+@supports (top: max(1em, 1px)) {
+  #toc {
+    top: max(0em, 11rem - var(--scrolltop) * 1px);
+  }
+}
+```
+
+## 水平滚动
+
+这是前端开发中最常见的问题之一。水平滚动表明元素位于视口边界之外或元素比视口宽。原因各不相同。我将尝试在这里总结它们，以及你可以用来查找和修复问题的策略。
+
+### Firefox 显示 `scroll` 标签
+
+值得强调的一个小帮助是 Firefox 为比视口宽的元素显示"scroll"标签。该标签将指导你调试导致水平滚动的元素。
+
+![image-20250325225257176](/img/image-20250325225257176.png)
+
+当你点击 `scroll` 标签时，Firefox 将突出显示导致水平滚动的元素。
+
+![image-20250325225311812](/img/image-20250325225311812.png)
+
+`h2` 和 `p` 元素导致水平滚动，因为它们比视口宽。因此，当点击"scroll"标签时，Firefox 会突出显示它们。
+
+### 查找水平滚动错误
+
+让我们首先关注如何查找水平滚动问题。首先要做的是确保默认显示滚动条。例如，macOS 在你开始滚动（垂直或水平）之前不会显示滚动条。使滚动条可见可以帮助我们更快地发现滚动问题。
+
+转到"System Preferences" > "General" > "Show scroll bars" > "Always"。
+
+Windows 默认显示滚动条，所以那里不需要做任何事情。
+
+#### 向左或向右滚动
+
+在你想要测试的页面上，尝试用鼠标或触控板向左或向右滚动。继续缩小屏幕，并重复该过程。如果没有滚动，则在 DevTools 中激活移动模式。移动模式下的水平滚动问题可能如下所示：
+
+![image-20250325225341032](/img/image-20250325225341032.png)
+
+这意味着有一个元素比 `body` 或 `html` 元素宽。
+
+#### 使用 JavaScript 获取比 Body 宽的元素
+
+我们可以进一步使用脚本来检测元素是否比 `body` 或 `html` 元素宽。这在大型项目或你不熟悉的项目中很有用。
+
+```js
+[].forEach.call(document.querySelectorAll('body *'), function (el) {
+  if (el.offsetWidth > document.body.offsetWidth) {
+    console.log(el.className);
+  }
+});
+```
+
+在这里，我们选择了 `body` 内的所有元素，检查元素是否比它宽，并将其打印出来。
+
+#### 使用 `outline`
+
+通过使用 CSS 的 `outline` 属性，我们可以在布局中的每个元素周围添加轮廓。这对于揭示任何问题都有很大帮助。例如，它可以揭示任何元素是否占用了超过允许的空间。
+
+```css
+*,
+*:before,
+*:after {
+  outline: solid 1px;
+}
+```
+
+这完美地工作，但我们可以用 Addy Osmani 创建的[脚本](https://gist.github.com/addyosmani/fd3999ea7fce242756b1)将其提升到下一个级别：
+
+```js
+[].forEach.call($$('*'), function (a) {
+  a.style.outline = '1px solid #' + (~~(Math.random() * (1 << 24))).toString(16);
+});
+```
+
+这个脚本将为页面上的每个元素添加轮廓，每个元素都有不同的颜色。（在复杂布局中，所有轮廓都使用相同颜色会有点混乱。）
+
+![image-20250325225415836](/img/image-20250325225415836.png)
+
+注意使用 `outline` 比 `border` 好得多，原因如下：
+
+- 如果元素有边框，`outline` 将在边框之后添加。换句话说，`outline` 不会占用空间，因为它绘制在元素内容之外。
+- 如果 `box-sizing` 未设置为 `border-box` 或元素已经有边框，使用 `border` 可能会破坏一些设计组件。这会令人困惑。
+- `outline` 不会受到元素的 `border-radius` 影响。添加到页面的所有轮廓都将是矩形的。
+
+### 修复水平滚动
+
+现在我们已经识别了水平滚动问题，是时候学习如何调试它们了。当你发现水平滚动时，你可能一眼看不出问题的原因，所以你需要实验。
+
+打开浏览器的 DevTools 并开始逐个删除主要 HTML 元素，看看滚动是否消失（提示：你可以在 macOS 上使用 `CMD + z` 或在 Windows 上使用 `CTRL + z` 来取消元素的删除）。一旦你看到滚动消失了，记下你刚刚删除的元素。刷新页面，并深入该元素以查看那里有什么。水平滚动可能有几个原因。让我们探索它们。
+
+#### 固定宽度
+
+固定宽度肯定会导致水平滚动。例如，当视口窄于 1000 像素时，以下内容会导致错误。
+
+```css
+.section {
+  width: 1000px;
+}
+```
+
+要修复这个问题，我们需要使用 `max-width` 为元素设置最大宽度：
+
+```css
+.section {
+  width: 1000px;
+  max-width: 100%; /* 当视口小时，防止元素变得比 1000 像素宽。 */
+}
+```
+
+#### 具有负值的定位元素
+
+![image-20250325225452415](/img/image-20250325225452415.png)
+
+将位置属性（`top`、`right`、`bottom`、`left`）之一设置为负值的元素将导致水平滚动。
+
+```css
+.element {
+  position: absolute;
+  right: -100px;
+}
+```
+
+当你使用 CSS 变换将元素移出视口时，也会发生同样的事情。
+
+```css
+.element {
+  position: absolute;
+  right: 0;
+  transform: translateX(1500px);
+}
+```
+
+如果有必要将元素放置在其父元素之外，那么最好使用以下方法：
+
+- 应用 CSS `transform`
+- 在父元素上使用 CSS `overflow: hidden`，以防你没有其他选择
+
+#### 没有换行的 Flexbox 容器
+
+使用 `flexbox` 时，行默认不会元素换行。当视口变小时，会发生水平滚动，因为没有足够的空间在一行上显示所有元素。这是 `flexbox` 的常见问题。要解决它，你需要在某些屏幕尺寸上强制元素换行。
+
+```css
+.section {
+  display: flex;
+  flex-wrap: wrap; /* 在没有足够空间的情况下强制 flex item到新行。 */
+}
+```
+
+![image-20250325225531807](/img/image-20250325225531807.png)
+
+使用 CSS grid 时，有水平滚动的可能性。假设我们有一个具有动态列且最小宽度为 200 像素的网格。
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  grid-gap: 16px;
+}
+```
+
+一切看起来都很好，直到视口变窄。空间不够，结果发生水平滚动。
+
+![image-20250325225556349](/img/image-20250325225556349.png)
+
+要修复这个问题，我们可以使用媒体查询仅在有足够空间时应用网格。
+
+```css
+@media (min-width: 400px) {
+  .wrapper {
+    /* The grid goes here. */
+  }
+}
+```
+
+#### 长单词或内联链接
+
+如果文章有很长的单词或链接，如果处理不当，很容易导致水平溢出。
+
+![image-20250325225620383](/img/image-20250325225620383.png)
+
+如你所见，长单词导致水平滚动。解决方案是使用 `overflow-wrap` CSS 属性。它防止长单词溢出其行框。
+
+```css
+.content p {
+  overflow-wrap: break-word;
+}
+```
+
+值得一提的是，该属性已从 `word-wrap` 重命名为 `overflow-wrap`。
+
+#### 没有 `max-width: 100%` 的图像
+
+如果由于任何原因你没有使用 CSS 重置文件，那么你需要确保网站上的任何图像都不超过其父元素的宽度。要做到这一点，你只需要以下内容：
+
+```css
+img {
+  max-width: 100%;
+}
+```
+
+你猜对了——忘记包含该行会导致水平滚动。
+
+## 过渡
+
+CSS 过渡使我们能够平滑地将元素从一种状态动画到另一种状态。让我们探索一些常见问题。
+
+### 调整大小时的过渡
+
+过渡的一个烦人问题是在调整浏览器窗口大小时看到元素移动和动画。这是因为你将过渡应用于所有属性，这破坏了行为，甚至可能导致性能问题。
+
+```css
+.element {
+  transition: all 0.2s ease-out;
+}
+```
+
+`all` 关键字告诉我们过渡将应用于元素的所有属性。这对于一个元素可能是可以的，但在规模上使用这种模式是不推荐的。当我开始学习 CSS 时，我习惯于犯以下错误：
+
+```css
+* {
+  transition: all 0.2s ease-out;
+}
+```
+
+这段 CSS 为页面上的每个元素添加过渡。请不要这样做！这不是一个好主意。
+
+### 过渡高度
+
+一个常见需求是过渡元素的高度——例如，从 `0` 到 `auto`。`auto` 值会使元素的高度等于其中的内容。
+
+```css
+.element {
+  height: 0;
+  transition: height 0.2s ease-out;
+}
+
+.element:hover {
+  height: auto;
+}
+```
+
+不幸的是，这在 CSS 中是不可能的。你不能过渡到 `auto`。但是，有一个解决方法。我们可以使用大于内容高度的 `max-height` 值，而不是使用 `height`。例如，如果我们有一个高度为 200 像素的移动菜单，那么 `max-height` 的值应该至少为 300 像素。更大值的原因是确保元素的高度永远不会达到那个点。
+
+```css
+.element {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+}
+
+.element:hover {
+  max-height: 300px;
+}
+```
+
+我添加了 `overflow: hidden` 来裁剪当元素设置 `max-height: 0` 时可能可见的任何内容。
+
+### 过渡可见性和显示
+
+过渡元素的 `display` 属性是不可能的。但是，我们可以结合 `visibility` 和 `opacity` 属性来模拟以可访问的方式隐藏元素。
+
+![image-20250325225732667](/img/image-20250325225732667.png)
+
+这里我们有一个应该在鼠标悬停和键盘焦点时显示的菜单。如果我们只使用 `opacity` 来隐藏它，那么菜单仍然在那里，其链接可点击（尽管不可见）。这种行为不可避免地会导致混乱。更好的解决方案是使用如下内容：
+
+```css
+.menu {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease-out,
+    visibility 0.3s ease-out;
+}
+
+.menu-wrapper:hover .menu {
+  opacity: 1;
+  visibility: visible;
+}
+```
+
+CSS 的 `visibility` 属性是可动画的。当添加到 `transition` 组中时，它将被动画，菜单将很好地淡入和淡出，而不会突然消失。
+
+## 溢出
+
+`overflow` 属性的值默认为 `visible`。其他值是 `hidden`、`scroll` 和 `auto`。
+
+### overflow-y: auto vs. overflow-y: scroll
+
+当我们有一个具有固定高度和可滚动内容的组件时，使用 `overflow-y: scroll` 很诱人。缺点是当内容太短时，在 Windows 操作系统上会显示滚动条。对于 macOS，滚动条默认是隐藏的。
+
+```css
+.section {
+  overflow-y: scroll;
+}
+```
+
+![image-20250325225816568](/img/image-20250325225816568.png)
+
+要修复这个问题并仅在内容变长时显示滚动条，请使用 `auto`。
+
+```css
+.section {
+  overflow-y: auto;
+}
+```
+
+![image-20250325225835849](/img/image-20250325225835849.png)
+
+### 移动设备上的滚动
+
+当我们有，比如说，一个滑块时，仅添加 `overflow-x` 并称其为一天是不够的。在 iOS 上的 Chrome 中，我们需要继续滚动并手动移动内容。幸运的是，有一个属性可以增强滚动体验。
+
+```css
+.wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+```
+
+这被称为**基于动量的滚动**。[MDN 这样描述它](https://developer.mozilla.org/en-US/docs/Web/CSS/-webkit-overflow-scrolling)：
+
+> 内容在完成滚动手势并从触摸屏上移开手指后继续滚动一段时间。
+
+作为建议，确保避免在大的滚动上下文（例如全页布局）中使用 `-webkit-overflow-scrolling: touch`，因为这可能在 Safari iOS 上导致一些随机错误。
+
+### 具有 `overflow: hidden` 的内联块元素
+
+根据 CSS 规范：
+
+> "inline-block" 的基线是其正常流中最后一个行框的基线，除非它没有流内行框或其 "overflow" 属性的计算值不是 "visible"，在这种情况下基线是底部边距边缘。
+
+当 `inline-block` 元素的 `overflow` 值不是 `visible` 时，这将导致元素的底边根据其兄弟元素的文本基线对齐。
+
+![image-20250325225902504](/img/image-20250325225902504.png)
+
+要解决这个问题，更改具有 `overflow: hidden` 的按钮的对齐方式。
+
+```css
+.button {
+  vertical-align: top;
+}
+```
+
+## 文本溢出
+
+`text-overflow` 属性设置如何显示溢出的文本。最常见的值是 `ellipsis`：文本将被裁剪，在其末尾将有三个点，`像这样…`。
+
+![image-20250325225922342](/img/image-20250325225922342.png)
+
+该属性有时使用起来令人困惑。一个常见障碍是 `text-overflow: ellipsis` 的声明不会按你期望的方式工作。
+
+```css
+span {
+  text-overflow: ellipsis;
+}
+```
+
+要使 `text-overflow` 工作，需要以下条件：
+
+- 元素的 `display` 类型应设置为 `block`，
+- 元素必须设置 `overflow` 和 `white-space` 属性。
+
+```css
+span {
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+```
+
+设置了这些，它将按预期工作。出于好奇，我测试了其他显示类型，包括 `inline-block` 和 `flex`，它们都不能按预期工作。
+
+## `!important` 规则
+
+没有充分理由使用 `!important` 规则可能导致错误并浪费你的时间。为什么？因为它破坏了 CSS 的自然级联。你可能尝试样式化一个元素并发现样式不起作用。原因可能是另一个元素正在覆盖该样式。
+
+```css
+.element {
+  color: #222 !important;
+}
+.element {
+  color: #ccc;
+}
+```
+
+元素的颜色是 `#222`，即使第二次声明了不同的颜色。在大型项目中，随机使用 `!important` 可能导致很多混乱。
+
+一般避免 `!important`。在使用它之前考虑以下事项：
+
+- 尝试使用 DevTools 识别特异性问题的来源。
+- 当你使用第三方 CSS 文件时，有时是有道理的。你可能没有其他选择，只能覆盖外部样式。
+
+CSS 原子类最近变得更受欢迎。我认为这些是 `!important` 的良好使用场景。
+
+```html
+<div class="d-block"></div>
+```
+
+```css
+.d-block {
+  display: block !important;
+}
+```
+
+`d-block` 类将元素设置为显示为 `block` 类型。添加 `!important` 确保它将按预期应用。
+
+## Flexbox
+
+flexbox 布局模块为我们提供了一种水平或垂直布局一组项目的方法。flexbox 有很多常见问题：一些是开发者错误地做的，其他是浏览器实现中的错误。
+
+### 用户制造的错误
+
+#### 忘记 `flex-wrap`
+
+当将元素设置为 flexbox 项目的包装器时，很容易忘记 item 元素应该如何换行。一旦你缩小视口，你会注意到水平滚动。原因是 flexbox 默认不换行。
+
+```html
+<div class="section">
+  <div class="item"></div>
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+```
+
+```css
+.section {
+  display: flex;
+}
+```
+
+![image-20250325230112066](/img/image-20250325230112066.png)
+
+注意 item 元素不换行，从而导致水平滚动。始终确保添加 `flex-wrap: wrap`。
+
+```css
+.section {
+  display: flex;
+  flex-wrap: wrap;
+}
+```
+
+#### 使用 `justify-content: space-between` 进行间距
+
+当我们使用 flexbox 制作，比如说，卡片网格时，使用 `justify-content: space-between` 可能很棘手。
+
+![image-20250325230135989](/img/image-20250325230135989.png)
+
+上面的卡片网格被给予 `justify-content: space-between`，但注意最后一行看起来很奇怪？好吧，设计师假设卡片数量总是四的倍数（4、8、12 等）。
+
+CSS grid 推荐用于此场景。但是，如果你没有其他选择，只能使用 flexbox 创建网格，这里有一些你可以使用的解决方案。
+
+##### 使用内边距和负边距
+
+```html
+<div class="grid">
+  <div class="grid-item">
+    <div class="card"></div>
+  </div>
+  <!-- + 7 more cards -->
+</div>
+```
+
+```css
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -1rem;
+}
+.grid-item {
+  padding: 1rem 0 0 1rem;
+  flex: 0 0 25%;
+  margin-bottom: 1rem;
+}
+```
+
+每个 `grid-item` 在左侧有内边距，但每行的第一个网格项目不需要它。为了避免使用复杂的 CSS 选择器，我们可以通过在左侧使用负边距将包装器推到左边。
+
+![image-20250325230210839](/img/image-20250325230210839.png)
+
+##### 添加空的间隔元素
+
+在研究 Facebook 的新 CSS 时，我注意到间隔元素对我们现在正在解决的问题的有趣用例。
+
+![image-20250325230228893](/img/image-20250325230228893.png)
+
+如果我们有六个项目的网格，最后两个将作为空间隔元素添加。这确保 `space-between` 按预期工作。
+
+```html
+<!-- before -->
+<div class="grid">
+  <div class="grid-item">…</div>
+  <div class="grid-item">…</div>
+  <div class="grid-item">…</div>
+</div>
+
+<!-- after -->
+<div class="grid">
+  <div class="grid-item">…</div>
+  <div class="grid-item">…</div>
+  <div class="grid-item">…</div>
+  <div class="empty-element">…</div>
+</div>
+```
+
+再次，空元素的目的是保持间距按预期工作。当然，这应该动态完成。
+
+#### 在某些视口中隐藏 Flexbox 元素
+
+在移动设备上隐藏 flexbox 元素并在桌面上显示它可能很棘手。
+
+```css
+.element {
+  display: none;
+}
+@media (min-width: 768px) {
+  .element {
+    display: block;
+  }
+}
+```
+
+你可能不假思索地输入 `display: block`，因为这是显示隐藏元素的常见方法。但是，因为元素是 flex 包装器，`block` 的显示值可能会破坏布局。这个错误可能导致一些调试时间。
+
+```css
+@media (min-width: 768px) {
+  .element {
+    display: flex;
+  }
+}
+```
+
+#### 拉伸的图像
+
+默认情况下，如果方向设置为 `row`，flexbox 会拉伸其子项目以使它们在高度上相等，如果方向设置为 `column`，它会使它们在宽度上相等。这可能使图像看起来拉伸。
+
+```html
+<article class="recipe">
+  <img src="recipe.png" alt="" />
+  <h2>Recipe title</h2>
+</article>
+```
+
+```css
+.recipe {
+  display: flex;
+}
+img {
+  width: 50%;
+}
+```
+
+简单的在线搜索显示这个问题很常见，并且有不一致的浏览器行为。默认情况下仍然拉伸图像的唯一浏览器是 Safari 版本 13。要修复它，我们需要重置图像本身的对齐方式。
+
+```css
+.recipe img {
+  align-self: flex-start;
+}
+```
+
+![image-20250325230308168](/img/image-20250325230308168.png)
+
+虽然 Safari 版本 13 是唯一具有拉伸图像不一致行为的浏览器，但 `button` 元素在所有浏览器中都被拉伸。修复是相同的（`align-self: flex-start`），但像这样的小细节让你思考浏览器的奇怪之处。
+
+当 flex 包装器的方向设置为 `column` 时，我们看到相关问题。
+
+```html
+<div class="card">
+  <h2 class="card__title"></h2>
+  <p class="card__desc"></p>
+  <span class="card__category"></span>
+</div>
+```
+
+```css
+.card {
+  display: flex;
+  flex-direction: column;
+}
+```
+
+`.card__category` 元素将拉伸以占用其父元素的全宽。如果这种行为不是预期的，那么你需要使用 `align-self` 强制 `span` 元素与其内容一样宽。
+
+![image-20250325230338410](/img/image-20250325230338410.png)
+
+```css
+.card__category {
+  align-self: flex-start;
+}
+```
+
+#### Flexbox Items 宽度不相等
+
+一个常见的困难是使 flexbox item 元素宽度相等。
+
+![image-20250325230356445](/img/image-20250325230356445.png)
+
+根据规范：
+
+> 如果指定的 `flex-basis` 是 `auto`，使用的 `flex-basis` 是 flex 项目主尺寸属性的值。（这本身可以是关键字 auto，它根据其内容调整 flex 项目的大小。）
+
+每个 flex item 元素都有一个 `flex-basis` 属性，它充当该元素的大小属性。当值是 `flex-basis: auto` 时，基础是内容的大小。所以，有更多文本的子项目将——你猜对了——更大。这可以通过以下方式解决：
+
+```css
+.item {
+  flex-grow: 1;
+  flex-basis: 0%;
+}
+```
+
+这样，每个 item 元素将占用与其兄弟项目相同的空间。
+
+#### 使用 Flexbox 将最小宽度设置为零
+
+`min-width` 的默认值是 `auto`，它计算为 `0`。flex item 元素的 `min-width` 等于其内容的大小。
+
+根据 [CSS 规范](https://www.w3.org/TR/css-flexbox-1/)：
+
+> 默认情况下，flex item 元素不会收缩到其最小内容大小以下（最长单词或固定大小元素的长度）。要更改此设置，请设置 min-width 或 min-height 属性。
+
+考虑以下示例：
+
+![image-20250325230420478](/img/image-20250325230420478.png)
+
+人名很长，导致水平滚动。所以，我们添加以下内容来截断它：
+
+```css
+.c-person__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+```
+
+技巧是向元素添加 `min-width: 0`。
+
+```css
+.c-person__name {
+  /* Other styles */
+  min-width: 0;
+}
+```
+
+这是修复后的外观：
+
+![image-20250325230441017](/img/image-20250325230441017.png)
+
+#### Flex 格式化上下文
+
+值得一提的是，当我们为元素分配 `display: flex` 时，flex 容器建立新的 flex 格式化上下文。添加 `float` 不会起作用。此外，flex 容器的 item 元素没有边距折叠。
+
+### 浏览器实现错误
+
+让我们走过一些与 flexbox 相关的最常见问题，这些问题与不正确或不一致的浏览器实现有关。
+
+在本节中，我将大量依赖 Philip Walton 的 [flexbugs](https://github.com/philipwalton/flexbugs)，这是所有与 flexbox 相关的浏览器错误的绝佳资源。
+
+#### `flex-basis` 不支持 `calc()`
+
+![image-20250325230509728](/img/image-20250325230509728.png)
+
+当使用 flex 属性的简写版本时，Internet Explorer 从 10 到 11 版本都忽略任何 `calc()` 函数。
+
+```css
+.element {
+  flex: 0 0 calc(100% / 3);
+}
+```
+
+解决方案是写出完整版本。
+
+```css
+.element {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: calc(100% / 3);
+}
+```
+
+在 Internet Explorer 10 中，`calc()` 函数在完整的 `flex-basis` 声明中不起作用。为了解决这个问题，我们做以下事情：
+
+```css
+.element {
+  flex: 0 0 auto;
+  width: calc(100% / 3);
+}
+```
+
+#### 一些 HTML 元素不能作为 Flex 容器
+
+![image-20250325230532690](/img/image-20250325230532690.png)
+
+诸如 `button`、`fieldset` 和 `summary` 之类的元素不能作为 flex 容器工作。flexbugs 存储库给出以下原因：
+
+> 浏览器对这些元素 UI 的默认渲染与 `display: flex` 声明冲突。
+
+考虑以下示例：
+
+```html
+<fieldset>
+  <legend>Enter your information</legend>
+  <p>
+    <label for="name">Your name</label>
+    <input type="text" id="name" />
+  </p>
+  <p>
+    <label for="email">Email address</label>
+    <input type="email" id="email" />
+  </p>
+</fieldset>
+```
+
+```css
+fieldset {
+  display: flex;
+  flex-wrap: wrap;
+}
+```
+
+你会假设输入将彼此相邻显示，对吧？这个错误不是这种情况。它不会起作用。解决方法是将输入包装在另一个可以充当 flex 容器的元素中。
+
+```html
+<fieldset>
+  <div class="inputs-group">
+    <!-- inputs -->
+  </div>
+</fieldset>
+```
+
+```css
+.inputs-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+```
+
+在 Chrome、Firefox 和 Safari 中的 `button` 元素错误已修复。
+
+#### 内联元素不被视为 Flex Items
+
+所有内联元素，包括 `::before` 和 `::after` 伪元素，在 Internet Explorer 10 中不能作为 flex item 元素工作。在版本 11 中，这个错误对常规内联元素已修复，但仍然影响 `::before` 和 `::after` 伪元素。
+
+```html
+<div class="element"></div>
+```
+
+```css
+.element {
+  display: flex;
+}
+
+.element::before {
+  content: 'Hello';
+  flex-grow: 1;
+}
+```
+
+`::before` 伪元素不会作为 flex item 元素工作。解决方法是向项目添加除 `inline` 以外的 `display` 值（例如，`inline-block`、`block` 或 `flex`）。
+
+```css
+.element::before {
+  content: 'Hello';
+  flex-grow: 1;
+  display: block;
+}
+```
+
+#### 使用 `flex` 简写时 `flex-basis` 中的 `!important` 被忽略
+
+![image-20250325230617598](/img/image-20250325230617598.png)
+
+在 Internet Explorer 10 中，`!important` 规则在简写版本中与 `flex-basis` 不起作用。
+
+```css
+.element {
+  flex: 0 0 100% !important;
+}
+```
+
+这不会起作用。`100%` 的 `flex-basis` 设置将被忽略。我们需要写出完整版本。
+
+```css
+.element {
+  flex: 0 0 100% !important;
+  flex-basis: 100% !important;
+}
+```
+
+注意这个错误在 Internet Explorer 11 中已修复。
+
+#### 使用 `margin: auto` 居中 Flex Item 在 Flexbox 容器设置为列时不起作用
+
+![image-20250325230640393](/img/image-20250325230640393.png)
+
+你可以使用 `margin: auto` 在其容器中居中 flex item 元素。在 Internet Explorer 从 10 到 11 版本中，当 flexbox 容器的方向是列时，此功能不起作用。
+
+```html
+<div class="wrapper">
+  <div class="item"></div>
+</div>
+```
+
+```css
+.wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.item {
+  margin: auto;
+}
+```
+
+`.item` 不是居中的，而是根据 `align-self: stretch`（默认值）渲染。解决方案是：
+
+- 在 item 元素本身上使用 `align-self: center`，
+- 在容器上使用 `align-items: center`。
+
+这个问题在 Microsoft Edge 中已修复。
+
+#### Flex Item 使用 `max-width` 不能正确对齐
+
+![image-20250325230705998](/img/image-20250325230705998.png)
+
+当 `max-width` 用于 flex item 元素，与 flex 容器上的 `justify-content` 结合使用时，间距计算不正确。
+
+```css
+.item {
+  flex: 1 0 0%;
+  max-width: 25%;
+}
+```
+
+这里的预期结果是元素的大小将从 `0% (flex-basis)` 开始，不会超过 `25% (max-width)`。我们可以通过为 `max-width` 而不是 `flex-basis` 设置值来实现相同效果，我们可以通过设置最小大小（行方向的 `min-width`，列方向的 `min-height`）让它收缩。
+
+```css
+.item {
+  flex: 0 1 25%;
+  min-width: 0%;
+}
+```
+
+### Firefox 的 Flexbox 检查器
+
+Firefox 在其 DevTools 中有一些调试 flexbox 组件的绝佳资源。它在每个作为 flex 容器的元素旁边显示"flex"标签。当在"检查器"面板中悬停元素时，信息栏（深灰色的那个）显示 flex 元素的类型。
+
+![image-20250325230734257](/img/image-20250325230734257.png)
+
+很棒的是"flex"标签是可点击的。当它被点击时，Firefox 将突出显示 flex 布局项目。它也可以从"规则"面板中 CSS 声明旁边的小 flexbox 图标访问。
+
+![image-20250325230751768](/img/image-20250325230751768.png)
+
+当你对 flexbox 布局如何工作有疑问时，突出显示很有用。利用这些工具——它们使你能够确保没有奇怪的事情发生，并清除对 flexbox 容器的任何混淆。
+
+## CSS Grid
+
+### 意外的隐式轨道
+
+CSS grid 的一个常见错误是通过将项目放置在网格的显式边界之外来创建额外的网格轨道。首先，**隐式**和**显式**网格之间有什么区别？
+
+![image-20250325230813400](/img/image-20250325230813400.png)
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.item-1 {
+  grid-column: 1 / 2;
+}
+.item-2 {
+  grid-column: 3 / 4;
+}
+```
+
+`.item-1` 元素有一个**隐式**网格轨道，它被放置在网格的边界内。`.item-2` 元素有一个**显式**网格轨道，它将元素放置在定义的网格之外。
+
+CSS grid 允许这样做。问题是当开发者不知道已创建隐式网格轨道时。在使用 CSS grid 时，确保为 `grid-column` 或 `grid-row` 使用正确的值。
+
+### 具有 `1fr` 的列计算为零
+
+有一种情况，具有 `1fr` 的列将计算为 `0` 的宽度，这意味着它是不可见的。
+
+```html
+<div class="wrapper">
+  <div class="item"></div>
+  <div class="item"></div>
+  <div class="item"></div>
+  <div class="item"></div>
+</div>
+```
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(50px, 200px)) 1fr;
+  grid-template-rows: 200px;
+  grid-gap: 20px;
+}
+```
+
+我们有三个项目，最小 50 像素，最大 200 像素。最后一个项目应该占用剩余空间，`1fr`。如果前三个项目的宽度总和小于 600 像素，那么如果最后一列：
+
+- 完全没有内容，
+- 没有边框或内边距。
+
+则最后一列将**不可见**。
+
+![image-20250325230843045](/img/image-20250325230843045.png)
+
+在使用 CSS grid 时记住这一点。这个问题起初可能令人困惑，但当你理解它如何工作时，你会没事的。
+
+### 相等的 `1fr` 列
+
+你可能认为 CSS grid 分数单位 `1fr` 像百分比一样工作。它不是。
+
+```html
+<div class="wrapper">
+  <div class="item">Item 1</div>
+  <div class="item">Item 2</div>
+  <div class="item">Item 3</div>
+</div>
+```
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 200px;
+  grid-gap: 20px;
+}
+```
+
+![image-20250325230908174](/img/image-20250325230908174.png)
+
+项目看起来相等。但是，当其中一个有很长的单词时，其宽度会扩展。
+
+```html
+<div class="wrapper">
+  <div class="item">Item 1</div>
+  <div class="item">
+    I'm special because I have averylongwordthatmightmakemebiggerthanmysiblings.
+  </div>
+  <div class="item">Item 3</div>
+</div>
+```
+
+![image-20250325230926584](/img/image-20250325230926584.png)
+
+为什么会发生这种情况？默认情况下，CSS grid 的行为方式是给 `1fr` 单位一个 `auto` 的最小大小（`minmax(auto, 1fr)`）。我们可以覆盖这个并强制所有项目具有相等的宽度。默认行为对某些情况可能是好的，但它并不总是我们想要的。
+
+```css
+.wrapper {
+  /* other styles */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+```
+
+注意上面的内容会导致水平滚动。请参阅水平滚动部分了解解决方法。
+
+### 设置百分比值
+
+CSS grid 的独特之处在于它有一个**分数**单位，可以用来分割列和行。使用百分比违背了 CSS grid 的工作方式。
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 33% 33% 33%;
+  grid-gap: 2%;
+}
+```
+
+为 `grid-template-columns` 和 `grid-gap` 使用百分比值会导致水平滚动。相反，使用 `fr` 单位。
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-gap: 1rem;
+}
+```
+
+### 误用 `auto-fit` 和 `auto-fill`
+
+我不会认为这是一个错误，但误用 `auto-fit` 和 `auto-fill` 可能导致意外结果。让我们首先区分它们。采用以下网格：
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-gap: 1rem;
+}
+```
+
+我们的目标是 grid item 元素的最小宽度为 200 像素。
+
+在 `auto-fill` 中，空轨道不会折叠到 `0`，从而保持空间原样。
+
+在 `auto-fit` 中，浏览器将保持 200 像素的最小大小，如果有可用空间，空轨道将折叠到 `0`。因此，grid item 元素将占用剩余空间。
+
+我正在为客户编写新部分的布局，在测试时，我发现一个错误告诉我右侧有**空**空间。我打开 DevTools 并意识到我正在为网格使用 `auto-fill`。
+
+![image-20250325231002885](/img/image-20250325231002885.png)
+
+### 水平滚动和 minmax
+
+正如我在水平滚动部分中提到的，在没有适当测试的情况下使用 `minmax()` 可能导致 grid item 元素比视口宽，这将导致水平滚动。
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-gap: 16px;
+}
+```
+
+如果视口窄于 350 像素，则会发生水平滚动。我们可以通过设置媒体查询来避免这种情况。
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-gap: 16px;
+}
+@media (min-width: 400px) {
+  .wrapper {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  }
+}
+```
+
+这样，`minmax()` 函数只有在有足够空间时才会应用。
+
+#### 浏览器实现问题
+
+尽管 CSS grid 相对较新（于 2017 年 3 月发布），但它仍然可能具有挑战性，特别是在支持 Internet Explorer 11 中发布的旧版本时。为了避免任何问题，我建议使用 `@supports` 查询来检测浏览器是否支持新的网格规范。
+
+```css
+@supports (grid-area: auto) {
+  /* CSS grid code goes here */
+}
+```
+
+我使用 `grid-area` 是因为它是新网格规范的一部分。这样，Internet Explorer 11 不会应用 CSS grid。在 Internet Explorer 中支持网格并非不可能，但你需要坚持其旧实现。[Rachel Andrew](https://rachelandrew.co.uk/archives/2016/11/26/should-i-try-to-use-the-ie-implementation-of-css-grid-layout/) 详细写过这个主题。
+
+## 处理长和意外内容
+
+本节的标题呼应了我为 CSS-Tricks 写的[一篇文章](https://css-tricks.com/handling-long-unexpected-content-css/)。我将重新审视那篇文章并列出我们日常工作中出现的问题。我们有时努力构建组件而不考虑内容可能运行多长时间。思考这样的问题，并决定在这些情况下该怎么做。
+
+> 当你编写 CSS 时，你正在编写抽象规则来获取未知内容并在未知媒体中组织它。- [Keith J Grant](https://twitter.com/keithjgrant/status/842728744653676544)
+
+### 忘记在文本标签和图标之间设置内边距
+
+在某些布局中，我们需要为手风琴元素或输入字段添加图标作为 CSS 背景。
+
+![image-20250325231049192](/img/image-20250325231049192.png)
+
+注意文本如何与图标重叠。那是因为右侧没有内边距。修复这个很简单，但在用户发现错误之前找到错误很困难。我将在下一章中解释一些防止错误发生的技术。
+
+```css
+.accordion {
+  padding-right: 50px;
+}
+```
+
+具有图标的输入也可能发生同样的事情。
+
+![image-20250325231116630](/img/image-20250325231116630.png)
+
+### 媒体对象中的长名称
+
+"媒体对象"是 [Nicole Sullivan 创造的术语](http://www.stubbornella.org/content/2010/06/25/the-media-object-saves-hundreds-of-lines-of-code/)。它由左侧的图像和右侧的描述性文本组成。在我们不费力的情况下，如果文本很长且没有足够的空间适合图像旁边，文本将换行到新行。但是，如果它换行到新行，它可能会破坏设计或看起来很奇怪。
+
+![image-20250325231140908](/img/image-20250325231140908.png)
+
+这个问题有不止一个解决方案。最常见的是：
+
+- 好老的浮动，
+- flexbox。
+
+假设我们的标记看起来像这样：
+
+```html
+<div class="card-meta">
+  <img src="author.jpg" alt="" />
+  <div class="author">
+    <span>Written by</span>
+    <h3>Ahmad Shadeed</h3>
+  </div>
+</div>
+```
+
+#### 解决方案 1：浮动
+
+要做到这一点，我们需要将图像向左浮动，然后添加 clearfix 来解决浮动引起的问题。
+
+```css
+.card-meta img {
+  float: left;
+}
+.card-meta::after {
+  content: '';
+  display: table;
+}
+```
+
+#### 解决方案 2：Flexbox
+
+Flexbox 更好，因为我们只需要将其应用于父元素。
+
+```css
+.card-meta {
+  display: flex;
+}
+```
+
+这将保持图像和文本在同一行。但是，我们应该考虑另一种情况，即如果我们不希望人名换行到新行？在这种情况下，`text-overflow` 来拯救。
+
+```css
+.card-meta h3 {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+```
+
+## 总结
+
+现在我们已经到达本章的结尾，我希望你对最常见的 CSS 属性及其问题更加熟悉。当然，我没有提到每一个属性，但我试图包含你在日常工作中会遇到的事情。
+
+如果你仔细阅读了前四章，那么你将能够使用你学到的技术从头到尾解决任何 CSS 问题。

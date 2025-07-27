@@ -241,12 +241,10 @@ html {
 And to polish it, we can revert the elements that shouldn’t have been inverted (such as images and videos):
 
 ```css
-html {
-  img,
-  video,
-  iframe {
-    filter: invert(100%) hue-rotate(-25deg);
-  }
+html img,
+html video,
+html iframe {
+  filter: invert(100%) hue-rotate(-25deg);
 }
 ```
 
